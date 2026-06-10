@@ -6,7 +6,7 @@
 <title>Moonstone Quest</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { background:#0a0a14; color:#ccc; font-family:'Courier New',monospace; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
+body { background:#0a0a14; color:#ccc; font-family:'Courier New',monospace; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
 a { color:#88aaff; }
 #back { position:fixed; top:8px; left:10px; z-index:100; font-size:13px; color:#6688aa; text-decoration:none; }
 #back:hover { color:#aaccff; }
@@ -28,13 +28,14 @@ canvas { image-rendering:pixelated; display:block; }
 #msgLog .msg.good { color:#66ff66; }
 #msgLog .msg.info { color:#6688ff; }
 #msgLog .msg.gold { color:#ffcc44; }
-#controls { display:none; padding:8px; background:#0e0e1a; border-top:1px solid #222; }
-#dpad { display:inline-block; width:130px; }
-#dpad button { width:40px; height:40px; background:#1a1a2e; border:1px solid #333; color:#aaa; font-size:18px; border-radius:6px; cursor:pointer; }
-#dpad button:active { background:#2a2a4e; }
-#actionBtns { display:inline-block; margin-left:12px; vertical-align:top; }
-#actionBtns button { display:block; width:70px; height:30px; margin:2px 0; background:#1a1a2e; border:1px solid #333; color:#aaa; font-size:10px; border-radius:6px; cursor:pointer; }
-#actionBtns button:active { background:#2a2a4e; }
+#controls { display:none; padding:6px 8px 10px; background:#0e0e1a; border-top:1px solid #222; flex-shrink:0; }
+#controls > div { display:flex; align-items:center; justify-content:center; gap:0; }
+#dpad { display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(2,1fr); width:144px; height:96px; gap:3px; flex-shrink:0; }
+#dpad button { width:100%; height:100%; background:#1a1a2e; border:1px solid #333; color:#ccc; font-size:22px; border-radius:8px; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+#dpad button:active { background:#2a2a4e; color:#fff; }
+#actionBtns { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-left:16px; flex:1; max-width:260px; }
+#actionBtns button { height:38px; background:#1a1a2e; border:1px solid #333; color:#ccc; font-size:12px; border-radius:8px; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; white-space:nowrap; }
+#actionBtns button:active { background:#2a2a4e; color:#fff; }
 #shopOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.85); z-index:50; justify-content:center; align-items:center; }
 #shopBox { background:#12122a; border:2px solid #3355aa; border-radius:10px; padding:18px 22px; max-width:420px; width:90%; max-height:85vh; overflow-y:auto; }
 #shopBox h2 { color:#ffcc44; text-align:center; margin-bottom:10px; }
@@ -46,15 +47,30 @@ canvas { image-rendering:pixelated; display:block; }
 #shopBox .shopItem .siDesc { color:#777; font-size:11px; display:none; }
 #shopBox .shopMsg { color:#66ff66; text-align:center; margin-top:8px; font-size:12px; min-height:16px; }
 #shopBox .shopClose { text-align:center; margin-top:10px; color:#888; font-size:12px; }
+
+/* ── Mobile / touch layout ── */
 @media (max-width:700px) {
   #wrap { flex-direction:column; }
-  #sidebar { width:100%; max-height:30vh; flex-shrink:0; flex-direction:row; flex-wrap:wrap; border-left:none; border-top:1px solid #222; padding:6px; }
-  #sidebar h2 { width:100%; }
-  #msgLog { max-height:60px; }
+  #sidebar { width:100%; max-height:26vh; flex-shrink:0; flex-direction:row; flex-wrap:wrap; border-left:none; border-top:1px solid #222; padding:4px 8px; font-size:11px; overflow-y:auto; }
+  #sidebar h2 { width:100%; font-size:13px; margin-bottom:2px; }
+  #sidebar .stat { margin:1px 0; }
+  #msgLog { max-height:40px; }
+  #hpBar { height:10px; }
+  #expBar { height:8px; }
+  body { overflow:hidden; }
 }
-/* Touch device detection */
-touch-device #controls { display:block; text-align:center; }
 #controls.touch-active { display:block; text-align:center; }
+
+/* Extra compact for very small screens */
+@media (max-width:400px) {
+  #sidebar { max-height:22vh; padding:3px 6px; font-size:10px; }
+  #sidebar h2 { font-size:12px; }
+  #msgLog { max-height:30px; }
+  #controls { padding:4px 6px 8px; }
+  #dpad { width:120px; height:80px; }
+  #dpad button { font-size:18px; }
+  #actionBtns button { height:32px; font-size:10px; }
+}
 </style>
 </head>
 <body>
@@ -76,16 +92,19 @@ touch-device #controls { display:block; text-align:center; }
   </div>
 </div>
 <div id="controls">
-  <div id="dpad">
-    <div style="text-align:center"><button onclick="doMove(0,-1)">▲</button></div>
-    <div style="text-align:center"><button onclick="doMove(-1,0)">◄</button><button onclick="doMove(0,1)" style="margin:0 4px">▼</button><button onclick="doMove(1,0)">►</button></div>
-  </div>
-  <div id="actionBtns">
-    <button onclick="doAttack()">⚔ Attack</button>
-    <button onclick="doHeal()">🌿 Heal</button>
-    <button onclick="doExpHerb()">✦ ExpHerb</button>
-    <button onclick="doShop()">🏪 Shop</button>
-    <button onclick="doDescend()">▼ Stairs</button>
+  <div>
+    <div id="dpad">
+      <span></span><button onclick="doMove(0,-1)">▲</button><span></span>
+      <button onclick="doMove(-1,0)">◄</button><button onclick="doMove(0,1)">▼</button><button onclick="doMove(1,0)">►</button>
+    </div>
+    <div id="actionBtns">
+      <button onclick="doAttack()">⚔️ Attack</button>
+      <button onclick="doHeal()">🌿 Heal</button>
+      <button onclick="doShop()">🏪 Shop</button>
+      <button onclick="doExpHerb()">✦ Exp</button>
+      <button onclick="doDescend()">▼ Down</button>
+      <button onclick="location.href='../index.html'">🏠 Menu</button>
+    </div>
   </div>
 </div>
 <div id="shopOverlay">
@@ -563,21 +582,17 @@ function doDescend(){initAudio();tryDescend();}
 // ─── Touch device detection ───
 (function detectTouch(){
   function showControls(){
-    document.getElementById('controls').classList.add('touch-active');
-    // also apply mobile layout on narrow screens
-    if(window.innerWidth<=700){
-      document.getElementById('wrap').style.flexDirection='column';
-    }
+    var c=document.getElementById('controls');
+    if(c.classList.contains('touch-active'))return;
+    c.classList.add('touch-active');
     window.removeEventListener('touchstart',showControls);
     window.removeEventListener('touchmove',showControls);
+    // recalculate canvas size after controls appear
+    setTimeout(resizeCanvas,50);
   }
-  // Show on first touch event
   window.addEventListener('touchstart',showControls,{passive:true});
   window.addEventListener('touchmove',showControls,{passive:true});
-  // Also check if already known to be touch device
-  if('ontouchstart' in window || navigator.maxTouchPoints>0){
-    showControls();
-  }
+  if('ontouchstart' in window || navigator.maxTouchPoints>0) showControls();
 })();
 
 // ─── Input ───
