@@ -169,6 +169,31 @@ const THUMB_ART = {
       <circle cx="178" cy="150" r="1" fill="#44cc44" opacity=".2"/>
     </svg>`
   },
+  'warrior-quest': {
+    bg: 'linear-gradient(135deg, #1a0d0a 0%, #2e1a0d 40%, #1a0d0a 100%)',
+    svg: `<svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="wqg" cx="50%" cy="40%" r="45%">
+          <stop offset="0%" stop-color="#ff8855" stop-opacity=".8"/>
+          <stop offset="100%" stop-color="#ff8855" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="100" cy="80" r="40" fill="url(#wqg)"/>
+      <text x="100" y="55" text-anchor="middle" font-size="16" fill="#ffd866" font-weight="bold" font-family="serif">⚔️</text>
+      <text x="100" y="90" text-anchor="middle" font-size="42">🐱</text>
+      <text x="100" y="120" text-anchor="middle" font-size="14" fill="#ff6644" font-weight="bold">WARRIOR</text>
+      <text x="100" y="138" text-anchor="middle" font-size="12" fill="#ff9966">QUEST</text>
+      <g fill="#ff6644" opacity=".3">
+        <circle cx="40" cy="50" r="2"/>
+        <circle cx="160" cy="60" r="1.5"/>
+        <circle cx="55" cy="140" r="1.8"/>
+        <circle cx="150" cy="145" r="1.2"/>
+        <circle cx="30" cy="100" r="1"/>
+        <circle cx="170" cy="100" r="1.5"/>
+      </g>
+      <text x="100" y="170" text-anchor="middle" font-size="11" fill="#886644">⚡ 🌑 💨 🌊 🐾</text>
+    </svg>`
+  },
   dungeon: {
     bg: 'linear-gradient(135deg, #0a0a14 0%, #1a0d2e 40%, #0a0a14 100%)',
     svg: `<svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -275,7 +300,7 @@ const DEFAULT_THUMB = {
         <h2>${g.name}</h2>
         <p>${g.description}</p>
         <div class="card-footer">
-          <span class="tag">Roguelike</span>
+          <span class="tag">${g.id==='warrior-quest'?'Text Adventure':'Roguelike'}</span>
         </div>
       </div>`;
     grid.appendChild(card);
