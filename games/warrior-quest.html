@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Warrior Quest ⚔️</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a14;--panel:#0e0e1a;--card:#151528;--border:#252540;--accent:#ff6644;--accent2:#ff8866;--green:#44cc66;--red:#ff4455;--blue:#4488ff;--gold:#ffd866;--purple:#aa66ff;--text:#eeeef5;--dim:#777;--silver:#aab}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.screen{display:none;flex-direction:column;align-items:center;width:100%;max-width:600px;height:100vh;padding:1rem;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen.active{display:flex}
+
+/* ── Title Screen ── */
+.title-screen{justify-content:center;text-align:center;gap:1.5rem}
+.title-screen h1{font-size:2.4rem;background:linear-gradient(135deg,var(--accent),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.title-screen .subtitle{color:var(--dim);font-size:.95rem}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 2rem;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.96)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 20px rgba(255,102,68,.3)}
+.btn-primary:hover{box-shadow:0 6px 28px rgba(255,102,68,.45)}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn-sm{padding:.5rem 1.2rem;font-size:.85rem;border-radius:8px}
+
+/* ── Clan Select ── */
+.clan-grid{display:flex;flex-direction:column;gap:.75rem;width:100%;max-width:500px}
+.clan-card{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:1rem 1.2rem;cursor:pointer;transition:transform .15s,border-color .2s;display:flex;align-items:center;gap:1rem}
+.clan-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.clan-card .emoji{font-size:2rem;width:3rem;text-align:center}
+.clan-card .info{flex:1}
+.clan-card .info h3{font-size:1.05rem;margin-bottom:.15rem}
+.clan-card .info .desc{font-size:.78rem;color:var(--silver)}
+.clan-card .info .bonus{font-size:.72rem;color:var(--accent2);margin-top:.2rem}
+
+/* ── Name Input ── */
+.name-screen{justify-content:center;gap:1.5rem;text-align:center}
+.name-screen input{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:.8rem 1.2rem;font-size:1.1rem;color:var(--text);text-align:center;width:80%;max-width:320px;outline:none;transition:border-color .2s}
+.name-screen input:focus{border-color:var(--accent)}
+
+/* ── HUD ── */
+.hud{width:100%;background:var(--panel);border-radius:12px;padding:.6rem 1rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.75rem;border:1px solid var(--border);flex-shrink:0}
+.hud .hp-wrap{display:flex;align-items:center;gap:.4rem;flex:1;min-width:120px}
+.hud .hp-bar{flex:1;height:14px;background:#1a1a2e;border-radius:7px;overflow:hidden;position:relative}
+.hud .hp-fill{height:100%;background:linear-gradient(90deg,var(--red),#ff6644);border-radius:7px;transition:width .4s ease}
+.hud .hp-text{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:.65rem;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.hud .stat{display:flex;align-items:center;gap:.25rem;font-size:.8rem;font-weight:600;white-space:nowrap}
+.hud .stat .emoji{font-size:1rem}
+
+/* ── Adventure ── */
+.adventure-screen{gap:0}
+.location{width:100%;text-align:center;padding:.5rem 0;flex-shrink:0}
+.location h2{font-size:1.2rem;color:var(--gold)}
+.event-text{width:100%;text-align:center;padding:.75rem 1rem;background:var(--panel);border-radius:12px;margin-bottom:.75rem;font-size:.95rem;line-height:1.6;border:1px solid var(--border);min-height:3rem;flex-shrink:0}
+.choices{display:flex;gap:.6rem;width:100%;margin-bottom:.5rem;flex-shrink:0}
+.choice-card{flex:1;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:.75rem .6rem;text-align:center;cursor:pointer;transition:transform .15s,border-color .2s,background .2s;font-size:.85rem;line-height:1.35;min-height:70px;display:flex;flex-direction:column;justify-content:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.choice-card:hover{border-color:var(--accent);background:#1a1a35}
+.choice-card:active{transform:scale(.96)}
+.choice-card .num{font-size:.6rem;color:var(--dim);margin-bottom:.2rem}
+
+/* ── Message Log ── */
+.msg-log{width:100%;flex:1;min-height:60px;max-height:140px;overflow-y:auto;background:var(--panel);border-radius:12px;padding:.5rem .75rem;border:1px solid var(--border);font-size:.78rem;line-height:1.5;color:var(--silver)}
+.msg-log .msg{padding:.15rem 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.msg-log .msg:last-child{border:none}
+.msg-log .msg.good{color:var(--green)}
+.msg-log .msg.bad{color:var(--red)}
+.msg-log .msg.special{color:var(--gold)}
+.msg-log .msg.info{color:var(--blue)}
+
+/* ── Shop ── */
+.shop-screen{gap:1rem}
+.shop-screen h2{font-size:1.4rem;color:var(--gold);text-align:center}
+.skill-grid{display:flex;flex-direction:column;gap:.6rem;width:100%;max-width:480px}
+.skill-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:.8rem 1rem;cursor:pointer;transition:transform .15s,border-color .2s;display:flex;align-items:center;gap:.8rem}
+.skill-card:hover{border-color:var(--gold)}
+.skill-card.owned{opacity:.5;cursor:default;border-color:var(--green)}
+.skill-card.cant-afford{opacity:.5;cursor:not-allowed}
+.skill-card .s-icon{font-size:1.8rem}
+.skill-card .s-info{flex:1}
+.skill-card .s-info h4{font-size:.9rem;margin-bottom:.1rem}
+.skill-card .s-info p{font-size:.72rem;color:var(--silver)}
+.skill-card .s-cost{font-size:.9rem;font-weight:700;color:var(--accent)}
+
+/* ── Boss ── */
+.boss-screen{gap:.75rem}
+.boss-screen .boss-name{font-size:1.6rem;text-align:center}
+.boss-hp-wrap{width:100%;background:var(--panel);border-radius:12px;padding:.75rem 1rem;border:1px solid var(--border)}
+.boss-hp-wrap .bar{height:18px;background:#1a1a2e;border-radius:9px;overflow:hidden;margin-top:.3rem}
+.boss-hp-wrap .fill{height:100%;background:linear-gradient(90deg,#cc2222,#ff4444);border-radius:9px;transition:width .4s ease}
+.boss-actions{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;width:100%}
+.boss-actions .btn{width:100%;font-size:.85rem;padding:.7rem .5rem}
+
+/* ── Ending ── */
+.end-screen{justify-content:center;text-align:center;gap:1rem}
+.end-screen h1{font-size:1.8rem}
+.end-screen .stats{background:var(--panel);border-radius:14px;padding:1.2rem;border:1px solid var(--border);width:100%;max-width:400px;text-align:left}
+.end-screen .stats .row{display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.9rem}
+.end-screen .stats .row:last-child{border:none}
+
+/* ── Nav bar ── */
+.top-nav{width:100%;display:flex;align-items:center;justify-content:space-between;padding:.3rem 0;flex-shrink:0}
+.top-nav a{color:var(--dim);text-decoration:none;font-size:.85rem;display:flex;align-items:center;gap:.3rem;transition:color .2s}
+.top-nav a:hover{color:var(--text)}
+
+/* ── Responsive ── */
+@media(max-width:480px){
+  .screen{padding:.6rem}
+  .choices{flex-direction:column;gap:.5rem}
+  .choice-card{flex-direction:row;min-height:auto;padding:.6rem .8rem;gap:.5rem;text-align:left}
+  .choice-card .num{margin:0;min-width:1.2rem}
+  .boss-actions{grid-template-columns:1fr 1fr}
+  .title-screen h1{font-size:1.8rem}
+  .hud{font-size:.75rem}
+}
+
+/* ── Animations ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.animate-in{animation:fadeIn .35s ease both}
+.shake{animation:shake .4s ease}
+.pulse{animation:pulse .6s ease}
+
+/* ── Typewriter ── */
+.typewriter{overflow:hidden;white-space:normal}
+</style>
+</head>
+<body>
+
+<!-- ═══ Title Screen ═══ -->
+<div id="screen-title" class="screen title-screen active">
+  <div style="font-size:3.5rem">⚔️</div>
+  <h1>Warrior Quest</h1>
+  <p class="subtitle">选择你的 Clan，开始冒险！<br>A text adventure in the Warrior Cats world</p>
+  <button class="btn btn-primary" onclick="showScreen('screen-clan')">开始冒险 🐾</button>
+  <button class="btn btn-secondary btn-sm" onclick="loadGame()" id="btn-continue" style="display:none">继续冒险 💾</button>
+  <a href="../index.html" style="color:var(--dim);text-decoration:none;font-size:.8rem;margin-top:1rem">← 返回游戏列表</a>
+</div>
+
+<!-- ═══ Clan Selection ═══ -->
+<div id="screen-clan" class="screen" style="justify-content:center;gap:1rem">
+  <h2 style="text-align:center;font-size:1.3rem">选择你的 Clan！</h2>
+  <div class="clan-grid" id="clan-grid"></div>
+</div>
+
+<!-- ═══ Name Input ═══ -->
+<div id="screen-name" class="screen name-screen">
+  <div style="font-size:2.5rem" id="name-clan-emoji">⚡</div>
+  <h2 id="name-clan-title">你选择了 ThunderClan！</h2>
+  <p style="color:var(--silver);font-size:.85rem" id="name-clan-bonus">特殊能力：战斗伤害 -1</p>
+  <input type="text" id="name-input" placeholder="输入你的武士名..." maxlength="20" autocomplete="off">
+  <button class="btn btn-primary" onclick="confirmName()">确认 ✅</button>
+</div>
+
+<!-- ═══ Adventure ═══ -->
+<div id="screen-adventure" class="screen adventure-screen">
+  <div class="top-nav">
+    <a href="../index.html">← Menu</a>
+    <span style="font-size:.75rem;color:var(--dim)">❄️ Warrior Quest</span>
+  </div>
+  <div class="hud">
+    <div class="hp-wrap">
+      <span style="font-size:1rem">❤️</span>
+      <div class="hp-bar"><div class="hp-fill" id="hp-fill"></div><span class="hp-text" id="hp-text">7/7</span></div>
+    </div>
+    <div class="stat"><span class="emoji">🐾</span><span id="prey-count">0</span></div>
+    <div class="stat"><span class="emoji">⭐</span><span id="star-status">✗</span></div>
+    <div class="stat" style="font-size:.7rem;color:var(--dim)">🔍<span id="secret-count">0</span></div>
+  </div>
+  <div class="location"><h2 id="location-text">📍 第 1/12 站：🌲 松树林</h2></div>
+  <div class="event-text" id="event-text">加载中...</div>
+  <div class="choices" id="choices-container"></div>
+  <div class="msg-log" id="msg-log"></div>
+</div>
+
+<!-- ═══ Shop ═══ -->
+<div id="screen-shop" class="screen shop-screen">
+  <h2>🏪 商店</h2>
+  <p style="color:var(--silver);font-size:.85rem">你有 <span id="shop-prey" style="color:var(--gold);font-weight:700">0</span> 🐾 猎物</p>
+  <div class="skill-grid" id="skill-grid"></div>
+  <button class="btn btn-secondary" onclick="closeShop()">不买了，继续冒险 →</button>
+</div>
+
+<!-- ═══ Boss ═══ -->
+<div id="screen-boss" class="screen boss-screen">
+  <div class="top-nav">
+    <span></span>
+    <span style="font-size:.75rem;color:var(--red);font-weight:700">⚠️ BOSS 战</span>
+  </div>
+  <div class="boss-name" id="boss-name">🐉 巨蛇</div>
+  <p style="color:var(--silver);font-size:.85rem;text-align:center" id="boss-desc"></p>
+  <div class="boss-hp-wrap">
+    <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--silver)">
+      <span>Boss 生命</span><span id="boss-hp-text">5/5</span>
+    </div>
+    <div class="bar"><div class="fill" id="boss-hp-fill"></div></div>
+  </div>
+  <div class="hud">
+    <div class="hp-wrap">
+      <span style="font-size:1rem">❤️</span>
+      <div class="hp-bar"><div class="hp-fill" id="boss-hp-fill-player"></div><span class="hp-text" id="boss-hp-text-player">7/7</span></div>
+    </div>
+    <div class="stat"><span class="emoji">🐾</span><span id="boss-prey">0</span></div>
+  </div>
+  <div id="boss-msg" class="event-text" style="min-height:auto;font-size:.85rem">选择你的行动！</div>
+  <div class="boss-actions" id="boss-actions">
+    <button class="btn btn-primary" onclick="bossAction(1)">1. ⚔️ 攻击</button>
+    <button class="btn btn-secondary" onclick="bossAction(2)">2. 🛡️ 防御+反击</button>
+    <button class="btn btn-secondary" onclick="bossAction(3)">3. 💨 躲避+找机会</button>
+    <button class="btn btn-secondary" onclick="bossAction(4)" id="btn-starclan">4. ⭐ 星族力量</button>
+  </div>
+</div>
+
+<!-- ═══ Ending ═══ -->
+<div id="screen-end" class="screen end-screen">
+  <div style="font-size:3rem" id="end-emoji">🎉</div>
+  <h1 id="end-title">冒险结束！</h1>
+  <p style="color:var(--silver)" id="end-subtitle"></p>
+  <div class="stats" id="end-stats"></div>
+  <button class="btn btn-primary" onclick="restart()">再来一次 🔄</button>
+  <a href="../index.html" style="color:var(--dim);text-decoration:none;font-size:.8rem">← 返回游戏列表</a>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  Warrior Quest — Game Engine
+// ═══════════════════════════════════════
+
+// ── Audio ──
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function initAudio(){if(!audioCtx)audioCtx=new AudioCtx()}
+function playTone(freq,dur,type='sine',vol=.15){
+  if(!audioCtx)return;try{
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=type;o.frequency.value=freq;g.gain.value=vol;
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);
+  o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+function sfx(name){
+  initAudio();
+  switch(name){
+    case'select':playTone(660,.1);break;
+    case'prey':playTone(880,.15);setTimeout(()=>playTone(1100,.1),100);break;
+    case'hurt':playTone(200,.2,'sawtooth',.12);break;
+    case'heal':playTone(523,.12);setTimeout(()=>playTone(659,.12),120);setTimeout(()=>playTone(784,.2),240);break;
+    case'secret':playTone(784,.1);setTimeout(()=>playTone(988,.1),100);setTimeout(()=>playTone(1175,.25),200);break;
+    case'starclan':playTone(440,.15);setTimeout(()=>playTone(554,.15),150);setTimeout(()=>playTone(659,.15),300);setTimeout(()=>playTone(880,.4),450);break;
+    case'boss_hit':playTone(300,.15,'square',.1);setTimeout(()=>playTone(250,.15,'square',.1),80);break;
+    case'boss_big':playTone(200,.2,'sawtooth',.12);setTimeout(()=>playTone(400,.15,'sawtooth',.1),120);break;
+    case'victory':playTone(523,.15);setTimeout(()=>playTone(659,.15),150);setTimeout(()=>playTone(784,.15),300);setTimeout(()=>playTone(1047,.4),450);break;
+    case'defeat':playTone(440,.3);setTimeout(()=>playTone(370,.3),300);setTimeout(()=>playTone(311,.3),600);setTimeout(()=>playTone(261,.6),900);break;
+    case'shop':playTone(700,.08);setTimeout(()=>playTone(900,.08),80);break;
+  }
+}
+
+// ── Data ──
+const CLANS={
+  thunder:{name:'雷族 ThunderClan',short:'ThunderClan',emoji:'⚡',trait:'brave',bonus:'战斗伤害 -1',desc:'勇敢、忠诚，森林的守护者'},
+  shadow:{name:'影族 ShadowClan',short:'ShadowClan',emoji:'🌑',trait:'cunning',bonus:'逃跑时 +1 猎物',desc:'狡猾、坚强，暗夜中的猎手'},
+  wind:{name:'风族 WindClan',short:'WindClan',emoji:'💨',trait:'swift',bonus:'每站 +30% 额外猎物',desc:'敏捷、自由，荒原上的奔跑者'},
+  river:{name:'河族 RiverClan',short:'RiverClan',emoji:'🌊',trait:'strong',bonus:'开始多 2 血',desc:'聪明、强壮，水中的勇士'},
+  sky:{name:'天族 SkyClan',short:'SkyClan',emoji:'🐾',trait:'agile',bonus:'可爬树发现秘密',desc:'灵巧、坚韧，树梢的守望者'}
+};
+
+const ALL_SKILLS={
+  double_strike:{name:'⚔️ 双重打击',desc:'战斗胜利时额外 +1 猎物',cost:3},
+  heal_touch:{name:'💚 治愈之触',desc:'每站结束恢复 1 血',cost:4},
+  eagle_eye:{name:'🦅 鹰眼',desc:'随机事件更容易获得猎物',cost:3},
+  star_shield:{name:'⭐ 星族之盾',desc:'受伤时 50% 几率减免',cost:5},
+  lucky_paw:{name:'🍀 幸运猫爪',desc:'所有随机结果偏向有利方向',cost:4}
+};
+
+const ROOMS=[
+  {place:'🌲 松树林',event:'你听到灌木丛里有动静...',choices:[
+    ['悄悄靠近，准备扑击','prey','🐭 你抓到了一只老鼠！'],
+    ['大喊"谁在那里！"','random','🐿️ 一只松鼠被你吓跑了...'],
+    ['绕道走，太危险了','nothing','你小心翼翼地绕过去了。']
+  ]},
+  {place:'🌊 河边',event:'你看到河里有一条大鱼！',choices:[
+    ['跳进水里抓鱼','random','🌊 你扑进水里...'],
+    ['在岸边等它游过来','prey','🐟 耐心等待后，你抓到了一条鱼！'],
+    ['猫才不碰水呢！','nothing','你甩甩尾巴走了。']
+  ]},
+  {place:'🏔️ 两脚兽地盘边缘',event:'一只凶猛的流浪猫拦住了你！',choices:[
+    ['迎战！亮出爪子！','fight','⚔️ 流浪猫扑了过来！'],
+    ['装作很厉害的样子','random','🐱 你弓起背，炸毛...'],
+    ['快跑！回去叫增援','nothing','你飞奔回营地。保存实力！']
+  ]},
+  {place:'🌙 月光空地',event:'你发现了一颗发光的石头...',choices:[
+    ['触碰它','starclan','✨ 星光包围了你...'],
+    ['绕着它转圈观察','nothing','你仔细观察后觉得还是别碰为好。'],
+    ['把它带回营地给巫医看','starclan','🌙 石头发出了柔和的光芒...']
+  ]},
+  {place:'🌿 药草园',event:'你闻到了奇怪的香味...',choices:[
+    ['采一些带回去','heal','🌿 你采到了珍贵的药草！'],
+    ['闻一闻就好','nothing','花香让你心情很好~'],
+    ['这可能有毒！快走','nothing','你警惕地离开了。']
+  ]},
+  {place:'🏠 废弃两脚兽巢穴',event:'一个破旧的小屋里传来奇怪的声音...',choices:[
+    ['进去看看','random','你小心翼翼地走进去...'],
+    ['在外面叫几声','nothing','你叫了几声，里面安静了。'],
+    ['这是陷阱！快走','nothing','你决定不冒险。']
+  ]},
+  {place:'🦅 鹰巢崖',event:'你抬头看到一只巨大的鹰在盘旋...',choices:[
+    ['躲进岩石缝里','nothing','你安全地躲过了鹰的视线。'],
+    ['快速冲过空地','random','你拼命奔跑...'],
+    ['爬上高处反击','fight','你决定不逃跑！⚔️']
+  ]},
+  {place:'🌫️ 迷雾沼泽',event:'浓雾弥漫，你几乎看不见前方...',choices:[
+    ['跟着气味走','random','你靠着嗅觉前进...'],
+    ['原地等雾散','nothing','你耐心等待，雾慢慢散了。'],
+    ['爬上树看方向','secret','你爬上了一棵大树...']
+  ]},
+  {place:'🍎 两脚兽花园',event:'你看到花园里有一碗猫粮和一碗水...',choices:[
+    ['吃一点，好饿啊','heal','你吃了猫粮，恢复了体力。'],
+    ['这是诱饵！不能吃！','nothing','你抵抗住了诱惑。'],
+    ['偷偷把水喝掉就跑','nothing','你喝了几口水，立刻跑了。']
+  ]},
+  {place:'🦊 狐狸洞穴',event:'你闻到了浓烈的狐狸气味...',choices:[
+    ['在洞口做标记宣示领地','fight','你勇敢地在洞口留下了气味...'],
+    ['悄悄绕过去','random','你轻手轻脚地...'],
+    ['回去报告族长','nothing','这不是你一个人能对付的。']
+  ]},
+  {place:'🌈 彩虹瀑布',event:'你发现了一个隐藏的瀑布，水雾中闪着彩虹！',choices:[
+    ['在瀑布下洗澡','heal_big','💧 冰凉的水让你精神焕发！'],
+    ['看看瀑布后面有什么','secret','你走进瀑布后面...'],
+    ['喝点水继续赶路','nothing','清甜的山泉水！出发！']
+  ]},
+  {place:'🏰 营地大门',event:'你回到了营地门口！但门口站着一只你不认识的猫...',choices:[
+    ['"站住！你是谁！"','random','那只猫转过身来...'],
+    ['悄悄从侧门溜进去','nothing','你成功绕过了。'],
+    ['邀请它进来做客','starclan','那只猫微笑着说...']
+  ]}
+];
+
+const BOSSES=[
+  ['🐉 巨蛇','一条巨大的蛇挡住了你的去路！'],
+  ['🐺 狼王','一只独眼狼王从阴影中走出！'],
+  ['🦅 暗鹰','一只比树还高的黑鹰俯冲而下！'],
+  ['👹 暗森林猫','一只暗森林的邪恶猫出现了！']
+];
+
+const SECRET_ITEMS=['星族水晶 🔮','古老护身符 🧿','神秘钥匙 🗝️','月亮石 🌙','远古卷轴 📜','星族圣物 ✨'];
+
+// ── Game State ──
+let G={clan:null,name:'',hp:7,maxHp:7,prey:0,starclan:false,secrets:[],skills:[],rooms:[],roomIdx:0,bossHp:0,bossMaxHp:0,bossName:'',bossDesc:'',bossTurn:0,waitingChoice:false};
+
+// ── Utilities ──
+function rand(n){return Math.floor(Math.random()*n)}
+function pick(arr){return arr[rand(arr.length)]}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v))}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+
+// ── Screen Management ──
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── Build Clan Grid ──
+function buildClanGrid(){
+  const grid=document.getElementById('clan-grid');
+  grid.innerHTML='';
+  for(const[key,c] of Object.entries(CLANS)){
+    const d=document.createElement('div');
+    d.className='clan-card';
+    d.innerHTML=`<div class="emoji">${c.emoji}</div><div class="info"><h3>${c.name}</h3><div class="desc">${c.desc}</div><div class="bonus">✨ ${c.bonus}</div></div>`;
+    d.onclick=()=>selectClan(key);
+    grid.appendChild(d);
+  }
+}
+
+function selectClan(key){
+  initAudio();sfx('select');
+  G.clan=CLANS[key];
+  G.clanKey=key;
+  if(G.clan.trait==='strong'){G.maxHp=9;G.hp=9}
+  else{G.maxHp=7;G.hp=7}
+  document.getElementById('name-clan-emoji').textContent=G.clan.emoji;
+  document.getElementById('name-clan-title').textContent=`你选择了 ${G.clan.name}！`;
+  document.getElementById('name-clan-bonus').textContent='✨ '+G.clan.bonus;
+  showScreen('screen-name');
+  setTimeout(()=>document.getElementById('name-input').focus(),300);
+}
+
+function confirmName(){
+  const input=document.getElementById('name-input');
+  const name=input.value.trim();
+  if(!name){input.style.borderColor='var(--red)';setTimeout(()=>input.style.borderColor='',800);return}
+  initAudio();sfx('select');
+  G.name=name;
+  G.rooms=shuffle(ROOMS);
+  G.roomIdx=0;
+  G.prey=0;G.starclan=false;G.secrets=[];G.skills=[];
+  addMsg(`欢迎，${name} of ${G.clan.short}！`,'special');
+  addMsg('今天你要独自巡逻整个领地！','info');
+  addMsg('一路上你会遇到各种危险和宝藏...','info');
+  addMsg('用猎物可以在商店换取装备和技能！','info');
+  startAdventure();
+}
+
+// ── Adventure ──
+function startAdventure(){
+  showScreen('screen-adventure');
+  showRoom();
+}
+
+function updateHUD(){
+  const pct=Math.max(0,(G.hp/G.maxHp)*100);
+  document.getElementById('hp-fill').style.width=pct+'%';
+  document.getElementById('hp-text').textContent=`${G.hp}/${G.maxHp}`;
+  document.getElementById('prey-count').textContent=G.prey;
+  document.getElementById('star-status').textContent=G.starclan?'✓':'✗';
+  document.getElementById('star-status').style.color=G.starclan?'var(--gold)':'var(--dim)';
+  document.getElementById('secret-count').textContent=G.secrets.length;
+}
+
+function showRoom(){
+  if(G.hp<=0){showEnding('dead_mid');return}
+  if(G.roomIdx>=G.rooms.length){startBoss();return}
+  const room=G.rooms[G.roomIdx];
+  document.getElementById('location-text').textContent=`📍 第 ${G.roomIdx+1}/12 站：${room.place}`;
+  document.getElementById('event-text').textContent=room.event;
+  const cc=document.getElementById('choices-container');
+  cc.innerHTML='';
+  G.waitingChoice=true;
+  room.choices.forEach((ch,i)=>{
+    const d=document.createElement('div');
+    d.className='choice-card animate-in';
+    d.style.animationDelay=(i*.08)+'s';
+    d.innerHTML=`<div class="num">${i+1}</div><div>${ch[0]}</div>`;
+    d.onclick=()=>makeChoice(i);
+    cc.appendChild(d);
+  });
+  updateHUD();
+  saveGame();
+}
+
+function makeChoice(idx){
+  if(!G.waitingChoice)return;
+  G.waitingChoice=false;
+  initAudio();sfx('select');
+  const room=G.rooms[G.roomIdx];
+  const[choiceText,resultType,resultText]=room.choices[idx];
+
+  addMsg(`> ${choiceText}`,'');
+  document.getElementById('event-text').textContent=resultText;
+
+  // Process result
+  processResult(resultType);
+
+  // ShadowClan bonus on nothing
+  if(resultType==='nothing'&&G.clan.trait==='cunning'&&Math.random()<0.4){
+    G.prey++;
+    addMsg('🌑 影族狡猾！逃跑路上顺手抓了一只猎物！+1！','good');
+  }
+
+  G.roomIdx++;
+  updateHUD();
+
+  // Heal touch
+  if(G.skills.includes('heal_touch')&&G.roomIdx<G.rooms.length){
+    G.hp=clamp(G.hp+1,0,G.maxHp);
+    addMsg('💚 治愈之触恢复了 1 点生命！','good');
+    updateHUD();
+  }
+
+  // Shop every 4 rooms
+  if(G.roomIdx%4===0&&G.roomIdx>0&&G.hp>0){
+    setTimeout(()=>{
+      if(G.roomIdx>=G.rooms.length){startBoss()}
+      else{showShop()}
+    },800);
+    return;
+  }
+
+  // Next room or boss
+  setTimeout(()=>{
+    if(G.hp<=0){showEnding('dead_mid')}
+    else if(G.roomIdx>=G.rooms.length){startBoss()}
+    else{showRoom()}
+  },900);
+}
+
+function processResult(type){
+  switch(type){
+    case'prey':
+      sfx('prey');
+      gainPrey(1);
+      addMsg('🐾 获得了猎物！','good');
+      break;
+    case'fight':{
+      sfx('hurt');
+      const dmg=rand(3)+1;
+      const catchPrey=Math.random()<0.5;
+      const adj=catchPrey?0.6:0.35;
+      const actual=takeDamage(dmg);
+      if(catchPrey){
+        gainPrey(1);
+        addMsg(`🐾 你赢了！受了 ${actual} 点伤。`,'good');
+      }else{
+        addMsg(`💔 你输了，受了 ${actual} 点伤！`,'bad');
+      }
+      break;
+    }
+    case'random':{
+      let outcomes;
+      if(G.skills.includes('lucky_paw'))outcomes=['prey','prey','nothing','heal_small'];
+      else if(G.skills.includes('eagle_eye'))outcomes=['prey','prey','nothing','nothing'];
+      else outcomes=['prey','damage','nothing','nothing'];
+      const luck=pick(outcomes);
+      if(luck==='prey'){sfx('prey');gainPrey(1);addMsg('🐾 运气不错！','good')}
+      else if(luck==='damage'){sfx('hurt');const d=takeDamage(rand(2)+1);addMsg(`💔 受了 ${d} 点伤！`,'bad')}
+      else if(luck==='heal_small'){sfx('heal');G.hp=clamp(G.hp+1,0,G.maxHp);addMsg('💚 意外的好运！恢复 1 血！','good')}
+      else{addMsg('什么也没发生~ 平安无事。','')}
+      break;
+    }
+    case'starclan':
+      sfx('starclan');
+      G.starclan=true;
+      G.hp=clamp(G.hp+2,0,G.maxHp);
+      addMsg('⭐ 星族保佑你！恢复 2 点生命值！','special');
+      break;
+    case'heal':
+      sfx('heal');
+      G.hp=clamp(G.hp+1,0,G.maxHp);
+      addMsg('💚 恢复了 1 点生命值！','good');
+      break;
+    case'heal_big':
+      sfx('heal');
+      G.hp=clamp(G.hp+2,0,G.maxHp);
+      addMsg('💚 恢复了 2 点生命值！','good');
+      break;
+    case'secret':
+      sfx('secret');
+      if(G.clan.trait==='agile')addMsg('🐾 天族的攀爬能力帮你找到了隐藏路径！','special');
+      const item=pick(SECRET_ITEMS);
+      G.secrets.push(item);
+      G.hp=clamp(G.hp+1,0,G.maxHp);
+      addMsg(`🔍 你发现了：${item}！`,'special');
+      addMsg('💚 宝藏的力量恢复了 1 点生命值！','good');
+      break;
+    case'nothing':
+      addMsg('什么也没发生。','');
+      break;
+  }
+}
+
+function gainPrey(n){
+  G.prey+=n;
+  if(G.clan.trait==='swift'&&Math.random()<0.3){
+    G.prey++;
+    addMsg('💨 风族的敏捷让你多抓了一只！+1！','good');
+  }
+  if(G.skills.includes('double_strike')){
+    G.prey++;
+    addMsg('⚔️ 双重打击！额外 +1 猎物！','good');
+  }
+}
+
+function takeDamage(amount){
+  if(G.skills.includes('star_shield')&&Math.random()<0.5){
+    amount=Math.max(0,amount-1);
+    addMsg('⭐ 星族之盾减免了伤害！','info');
+  }
+  if(G.clan.trait==='brave'&&amount>0){
+    amount=Math.max(0,amount-1);
+    addMsg('⚡ 雷族的勇气减轻了伤害！','info');
+  }
+  G.hp=Math.max(0,G.hp-amount);
+  return amount;
+}
+
+// ── Message Log ──
+function addMsg(text,cls){
+  const log=document.getElementById('msg-log');
+  const d=document.createElement('div');
+  d.className='msg'+(cls?' '+cls:'');
+  d.textContent=text;
+  log.appendChild(d);
+  log.scrollTop=log.scrollHeight;
+}
+
+// ── Shop ──
+function showShop(){
+  sfx('shop');
+  document.getElementById('shop-prey').textContent=G.prey;
+  const grid=document.getElementById('skill-grid');
+  grid.innerHTML='';
+  for(const[key,sk] of Object.entries(ALL_SKILLS)){
+    const owned=G.skills.includes(key);
+    const canAfford=G.prey>=sk.cost;
+    const d=document.createElement('div');
+    d.className='skill-card'+(owned?' owned':'')+((!owned&&!canAfford)?' cant-afford':'');
+    d.innerHTML=`<div class="s-icon">${sk.name.split(' ')[0]}</div><div class="s-info"><h4>${sk.name}</h4><p>${sk.desc}</p></div><div class="s-cost">${owned?'✅ 已拥有':sk.cost+' 🐾'}</div>`;
+    if(!owned&&canAfford){
+      d.onclick=()=>buySkill(key);
+      d.style.cursor='pointer';
+    }
+    grid.appendChild(d);
+  }
+  showScreen('screen-shop');
+}
+
+function buySkill(key){
+  const sk=ALL_SKILLS[key];
+  if(G.prey<sk.cost||G.skills.includes(key))return;
+  G.prey-=sk.cost;
+  G.skills.push(key);
+  sfx('heal');
+  addMsg(`✅ 学会了 ${sk.name}！`,'special');
+  showShop();
+}
+
+function closeShop(){
+  sfx('select');
+  if(G.roomIdx>=G.rooms.length){startBoss()}
+  else{startAdventure()}
+}
+
+// ── Boss Battle ──
+function startBoss(){
+  const[bName,bDesc]=pick(BOSSES);
+  G.bossName=bName;G.bossDesc=bDesc;
+  G.bossMaxHp=5+G.secrets.length;
+  G.bossHp=G.bossMaxHp;
+  G.bossTurn=0;
+
+  addMsg(`⚠️ 警告！${bDesc}`,'bad');
+  addMsg(`💀 Boss：${bName}`,'special');
+
+  document.getElementById('boss-name').textContent=bName;
+  document.getElementById('boss-desc').textContent=bDesc;
+  updateBossHUD();
+  document.getElementById('boss-msg').textContent='选择你的行动！';
+  setBossActionsEnabled(true);
+  showScreen('screen-boss');
+  saveGame();
+}
+
+function updateBossHUD(){
+  const pct=Math.max(0,(G.bossHp/G.bossMaxHp)*100);
+  document.getElementById('boss-hp-fill').style.width=pct+'%';
+  document.getElementById('boss-hp-text').textContent=`${G.bossHp}/${G.bossMaxHp}`;
+  const ppct=Math.max(0,(G.hp/G.maxHp)*100);
+  document.getElementById('boss-hp-fill-player').style.width=ppct+'%';
+  document.getElementById('boss-hp-text-player').textContent=`${G.hp}/${G.maxHp}`;
+  document.getElementById('boss-prey').textContent=G.prey;
+  // StarClan button
+  const sb=document.getElementById('btn-starclan');
+  if(!G.starclan){sb.style.opacity='.4';sb.title='需要星族祝福'}else{sb.style.opacity='1';sb.title=''}
+}
+
+function setBossActionsEnabled(on){
+  document.querySelectorAll('#boss-actions .btn').forEach(b=>b.disabled=!on);
+}
+
+function bossAction(act){
+  setBossActionsEnabled(false);
+  G.bossTurn++;
+  let msg='';
+  let bossDmg=0,playerDmg=0;
+
+  if(act===1){
+    // Attack
+    bossDmg=rand(3)+1;
+    if(G.clan.trait==='brave'){bossDmg++;msg='⚡ 雷族之力！'}
+    G.bossHp=Math.max(0,G.bossHp-bossDmg);
+    sfx('boss_hit');
+    msg+=(msg?' ':'')+`⚔️ 你造成 ${bossDmg} 点伤害！`;
+    // Boss counter
+    const bd=rand(2)+1;
+    playerDmg=takeDamage(bd);
+    sfx('hurt');
+    msg+=` 💔 Boss 反击！受 ${playerDmg} 点伤！`;
+  }
+  else if(act===2){
+    // Defend+counter
+    if(Math.random()<0.6){
+      bossDmg=rand(2)+1;
+      G.bossHp=Math.max(0,G.bossHp-bossDmg);
+      sfx('boss_hit');
+      msg=`🛡️ 防御成功！反击造成 ${bossDmg} 点伤害！`;
+    }else{
+      playerDmg=takeDamage(1);
+      sfx('hurt');
+      msg=`🛡️ 防御被打破！受 ${playerDmg} 点伤！`;
+    }
+  }
+  else if(act===3){
+    // Dodge+opportunity
+    if(Math.random()<0.5){
+      bossDmg=rand(2)+2;
+      G.bossHp=Math.max(0,G.bossHp-bossDmg);
+      sfx('boss_hit');
+      msg=`💨 躲避成功！找到破绽，造成 ${bossDmg} 点伤害！`;
+    }else{
+      playerDmg=takeDamage(rand(2)+1);
+      sfx('hurt');
+      msg=`💨 没躲开！受 ${playerDmg} 点伤！`;
+    }
+  }
+  else if(act===4){
+    // StarClan power
+    if(G.starclan){
+      bossDmg=rand(3)+3;
+      G.bossHp=Math.max(0,G.bossHp-bossDmg);
+      sfx('boss_big');
+      G.hp=clamp(G.hp+1,0,G.maxHp);
+      G.starclan=false;
+      msg=`⭐ 星族之力爆发！造成 ${bossDmg} 点伤害！！！💚 星光治愈了你 1 点生命！`;
+    }else{
+      msg='❌ 你没有星族祝福！浪费了一个回合！';
+      playerDmg=takeDamage(rand(2)+1);
+      sfx('hurt');
+      msg+=` Boss 趁机攻击！受 ${playerDmg} 点伤！`;
+    }
+  }
+
+  document.getElementById('boss-msg').textContent=msg;
+  updateBossHUD();
+
+  // Shake effect
+  if(playerDmg>0){document.querySelector('.boss-screen').classList.add('shake');setTimeout(()=>document.querySelector('.boss-screen').classList.remove('shake'),400)}
+
+  setTimeout(()=>{
+    if(G.bossHp<=0){showEnding('victory')}
+    else if(G.hp<=0){showEnding('dead_boss')}
+    else{setBossActionsEnabled(true)}
+  },1000);
+}
+
+// ── Endings ──
+function showEnding(type){
+  clearSave();
+  const emoji=document.getElementById('end-emoji');
+  const title=document.getElementById('end-title');
+  const sub=document.getElementById('end-subtitle');
+  const stats=document.getElementById('end-stats');
+
+  let rank='';
+  if(G.prey>=6)rank='⭐⭐⭐ 传说级！将载入族史！';
+  else if(G.prey>=4)rank='⭐⭐ 精英级！全族为你骄傲！';
+  else rank='⭐ 英勇的战士！';
+
+  if(type==='victory'){
+    sfx('victory');
+    emoji.textContent='🎉';
+    title.textContent=`${G.name} of ${G.clan.short}！`;
+    title.style.color='var(--gold)';
+    sub.textContent=`你击败了 ${G.bossName}！！！${rank}`;
+    stats.innerHTML=makeStats('victory');
+  }else if(type==='dead_boss'){
+    sfx('defeat');
+    emoji.textContent='💀';
+    title.textContent='你在 Boss 战中倒下了...';
+    title.style.color='var(--red)';
+    sub.textContent=`${G.name} of ${G.clan.short} 的灵魂升上了星族。但星族的猫永远守护着族！下次一定能赢！`;
+    stats.innerHTML=makeStats('dead');
+  }else{
+    sfx('defeat');
+    emoji.textContent='💀';
+    title.textContent='你在巡逻中倒下了...';
+    title.style.color='var(--red)';
+    sub.textContent=`${G.name} of ${G.clan.short} 的灵魂升上了星族。下次一定会更好！`;
+    stats.innerHTML=makeStats('dead');
+  }
+  showScreen('screen-end');
+}
+
+function makeStats(type){
+  let h=`<div class="row"><span>名字</span><span>${G.name} of ${G.clan.short}</span></div>`;
+  h+=`<div class="row"><span>❤️ 生命</span><span>${G.hp}/${G.maxHp}</span></div>`;
+  h+=`<div class="row"><span>🐾 猎物</span><span>${G.prey}</span></div>`;
+  h+=`<div class="row"><span>🔍 宝藏</span><span>${G.secrets.length}</span></div>`;
+  if(G.secrets.length)h+=`<div class="row" style="flex-direction:column;gap:.2rem"><span>宝藏列表</span><span style="font-size:.8rem;color:var(--gold)">${G.secrets.join(' ')}</span></div>`;
+  if(G.skills.length)h+=`<div class="row" style="flex-direction:column;gap:.2rem"><span>技能</span><span style="font-size:.8rem;color:var(--green)">${G.skills.map(s=>ALL_SKILLS[s].name).join(' ')}</span></div>`;
+  h+=`<div class="row"><span>⭐ 星族祝福</span><span>${G.starclan?'✓ 已获得':'✗'}</span></div>`;
+  if(type==='victory')h+=`<div class="row"><span>🏆 Boss</span><span>${G.bossName}</span></div>`;
+  return h;
+}
+
+// ── Save/Load ──
+const SAVE_KEY='warrior-quest-save';
+function saveGame(){
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify({
+      clanKey:G.clanKey,name:G.name,hp:G.hp,maxHp:G.maxHp,prey:G.prey,
+      starclan:G.starclan,secrets:G.secrets,skills:G.skills,
+      roomOrder:G.rooms.map(r=>r.place),roomIdx:G.roomIdx
+    }));
+  }catch(e){}
+}
+function loadGame(){
+  try{
+    const d=JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(!d)return;
+    initAudio();sfx('select');
+    G.clanKey=d.clanKey;G.clan=CLANS[d.clanKey];G.name=d.name;
+    G.hp=d.hp;G.maxHp=d.maxHp;G.prey=d.prey;G.starclan=d.starclan;
+    G.secrets=d.secrets||[];G.skills=d.skills||[];G.roomIdx=d.roomIdx||0;
+    // Rebuild room order
+    const roomMap={};ROOMS.forEach(r=>roomMap[r.place]=r);
+    G.rooms=d.roomOrder.map(p=>roomMap[p]).filter(Boolean);
+    if(G.rooms.length===0)G.rooms=shuffle(ROOMS);
+    addMsg(`欢迎回来，${G.name} of ${G.clan.short}！`,'special');
+    startAdventure();
+  }catch(e){console.error('Load failed',e)}
+}
+function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
+function checkSave(){
+  try{
+    const d=localStorage.getItem(SAVE_KEY);
+    if(d){document.getElementById('btn-continue').style.display='inline-flex'}
+  }catch(e){}
+}
+
+function restart(){
+  clearSave();
+  G={clan:null,name:'',hp:7,maxHp:7,prey:0,starclan:false,secrets:[],skills:[],rooms:[],roomIdx:0,bossHp:0,bossMaxHp:0,bossName:'',bossDesc:'',bossTurn:0,waitingChoice:false};
+  document.getElementById('msg-log').innerHTML='';
+  document.getElementById('name-input').value='';
+  showScreen('screen-clan');
+}
+
+// ── Keyboard ──
+document.addEventListener('keydown',e=>{
+  if(!G.waitingChoice)return;
+  if(e.key==='1')makeChoice(0);
+  else if(e.key==='2')makeChoice(1);
+  else if(e.key==='3')makeChoice(2);
+});
+document.getElementById('name-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter')confirmName();
+});
+
+// ── Init ──
+buildClanGrid();
+checkSave();
+</script>
+</body>
+</html>
