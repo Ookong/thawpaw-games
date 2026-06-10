@@ -16,6 +16,14 @@
       "icon": "snake",
       "description": "Classic snake! Eat, grow, survive!",
       "color": "#44cc44"
+    },
+    {
+      "id": "dungeon",
+      "name": "Dungeon Explore",
+      "file": "games/dungeon.html",
+      "icon": "dungeon",
+      "description": "Crawl through endless dungeons! Slay monsters, collect gold, go deeper!",
+      "color": "#aa44ff"
     }
   ]
 }
