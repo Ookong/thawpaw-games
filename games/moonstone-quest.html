@@ -679,7 +679,7 @@ function doDescend(){initAudio();tryDescend();}
     doMove(dir.dx,dir.dy);
     moveInterval=setInterval(function(){
       if(lastDir.dx!==0||lastDir.dy!==0) doMove(lastDir.dx,lastDir.dy);
-    },320);
+    },480);
   }
   function stopMove(){
     if(moveInterval){clearInterval(moveInterval);moveInterval=null;}
