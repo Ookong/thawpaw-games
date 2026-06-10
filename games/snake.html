@@ -108,6 +108,12 @@ canvas { display:block; border-radius:8px; }
 #joystickBase { width:120px; height:120px; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.15); border-radius:50%; position:relative; }
 #joystickKnob { width:50px; height:50px; background:rgba(255,255,255,.25); border:2px solid rgba(255,255,255,.35); border-radius:50%; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); transition:none; }
 
+/* D-pad (alternative to joystick) */
+#dpadControls { display:none; position:absolute; bottom:20px; left:20px; pointer-events:auto; }
+.dpad-row { display:flex; gap:6px; justify-content:center; }
+.dpad-btn { width:56px; height:56px; background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.15); border-radius:12px; color:#ccc; font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin:2px; }
+.dpad-btn:active { background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.35); }
+
 #touchActions { position:absolute; bottom:20px; right:20px; display:flex; gap:8px; pointer-events:auto; }
 #touchActions button { width:72px; height:64px; background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.18); border-radius:12px; color:#ccc; font-size:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
 #touchActions button:active { background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.35); }
@@ -213,6 +219,10 @@ canvas { display:block; border-radius:8px; }
       <div id="joystickKnob"></div>
     </div>
   </div>
+  <div id="dpadControls">
+    <div class="dpad-row"><button class="dpad-btn" ontouchstart="event.preventDefault();changeDir(0,-1)">▲</button></div>
+    <div class="dpad-row"><button class="dpad-btn" ontouchstart="event.preventDefault();changeDir(-1,0)">◀</button><button class="dpad-btn" ontouchstart="event.preventDefault();changeDir(0,1)">▼</button><button class="dpad-btn" ontouchstart="event.preventDefault();changeDir(1,0)">▶</button></div>
+  </div>
   <div id="touchActions">
     <button id="btnRetry" ontouchstart="event.preventDefault();retry()"><span class="icon">🔄</span><span class="label">Retry</span></button>
     <button id="btnPause" ontouchstart="event.preventDefault();togglePause()"><span class="icon">⏸️</span><span class="label">Pause</span></button>
@@ -239,6 +249,7 @@ canvas { display:block; border-radius:8px; }
     <h1 style="color:#88ee88;">🐍 Snake</h1>
     <div class="stat-bar" id="menuStats"></div>
     <button class="menu-btn" onclick="showSettings()"><span class="btn-icon">🎮</span>开始游戏</button>
+    <button class="menu-btn" onclick="showControlSettings()"><span class="btn-icon">⚙️</span>设置</button>
     <button class="menu-btn" onclick="showBank()"><span class="btn-icon">🏦</span>银  行</button>
     <button class="menu-btn" onclick="showShop()"><span class="btn-icon">🛒</span>商  店</button>
     <button class="menu-btn" onclick="showBackpack()"><span class="btn-icon">🎒</span>背  包</button>
@@ -259,6 +270,22 @@ canvas { display:block; border-radius:8px; }
       <div class="option-row" id="speedOptions"></div>
     </div>
     <button class="start-btn" onclick="startGame()">开 始 游 戏</button>
+    <div class="back-link" onclick="showMainMenu()">← 返回菜单</div>
+  </div>
+</div>
+
+<!-- Control Settings -->
+<div class="screen" id="controlScreen">
+  <div class="screen-box">
+    <h1 style="color:#88ee88;">⚙️ 设置</h1>
+    <div class="setting-group">
+      <div class="label">触屏控制方式</div>
+      <div class="option-row" id="controlOptions"></div>
+    </div>
+    <div style="color:#888;font-size:.8rem;margin:12px 0;line-height:1.4">
+      🕹️ <b>摇杆</b>：左下角圆形摇杆，拖动控制方向<br>
+      ⬆️ <b>方向键</b>：上下左右四个按钮
+    </div>
     <div class="back-link" onclick="showMainMenu()">← 返回菜单</div>
   </div>
 </div>
@@ -345,7 +372,7 @@ const STATE_KEY = 'thawpaw.snake.state.v2';
 let pState = loadState();
 
 function defaultState() {
-  return { gold:0, apples:0, ownedSkins:['green'], equippedSkin:'green', hiScore:0, settings:{ size:20, speed:'medium' } };
+  return { gold:0, apples:0, ownedSkins:['green'], equippedSkin:'green', hiScore:0, settings:{ size:20, speed:'medium', control:'joystick' } };
 }
 function loadState() {
   try {
@@ -486,6 +513,33 @@ function buildSettingsUI() {
 
 function selectSize(s) { selectedSize = s; buildSettingsUI(); }
 function selectSpeed(s) { selectedSpeed = s; buildSettingsUI(); }
+
+// ─── Control settings screen ───
+var CONTROL_OPTIONS = [
+  { id:'joystick', label:'🕹️ 摇杆', sub:'拖动控制' },
+  { id:'dpad', label:'⬆️ 方向键', sub:'上下左右按钮' },
+];
+
+function showControlSettings() {
+  showScreen('controlScreen');
+  buildControlUI();
+}
+
+function buildControlUI() {
+  var el = document.getElementById('controlOptions');
+  var cur = pState.settings.control || 'joystick';
+  el.innerHTML = CONTROL_OPTIONS.map(function(o) {
+    return '<div class="option-card' + (o.id===cur?' selected':'') + '" onclick="selectControl(\'' + o.id + '\')">' +
+      '<div class="opt-title">' + o.label + '</div><div class="opt-sub">' + o.sub + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function selectControl(c) {
+  pState.settings.control = c;
+  saveState();
+  buildControlUI();
+}
 
 // ─── Bank screen ───
 function showBank() {
@@ -1034,14 +1088,36 @@ function retry() {
 
 // ─── Touch detection ───
 function showTouchControls() {
-  const tc = document.getElementById('touchControls');
+  var tc = document.getElementById('touchControls');
   if (tc.classList.contains('active')) return;
   tc.classList.add('active');
   document.body.classList.add('touch-active');
   touchActive = true;
+  applyControlMode();
   window.removeEventListener('touchstart', showTouchControls);
   window.removeEventListener('touchmove', showTouchControls);
   setTimeout(resizeCanvas, 50);
+}
+
+function applyControlMode() {
+  var mode = pState.settings.control || 'joystick';
+  var joy = document.getElementById('joystick');
+  var dpad = document.getElementById('dpadControls');
+  if (mode === 'dpad') {
+    joy.style.display = 'none';
+    dpad.style.display = 'block';
+  } else {
+    joy.style.display = '';
+    dpad.style.display = 'none';
+  }
+}
+
+function changeDir(dx, dy) {
+  if (gameState !== 'playing') return;
+  var nd = { x: dx, y: dy };
+  if (nd.x !== -dir.x || nd.y !== -dir.y) {
+    nextDir = nd;
+  }
 }
 window.addEventListener('touchstart', showTouchControls, {passive:true});
 window.addEventListener('touchmove', showTouchControls, {passive:true});
