@@ -492,7 +492,11 @@ function showScreen(id) {
 
 function showMainMenu() {
   gameState = 'menu';
+  alive = false;
   hideAllScreens();
+  document.getElementById('overlay').classList.remove('active');
+  var tc = document.getElementById('touchControls');
+  if (tc) tc.classList.remove('active');
   document.getElementById('menuScreen').classList.add('active');
   updateMenuStats();
   document.getElementById('back').style.display = 'none';
