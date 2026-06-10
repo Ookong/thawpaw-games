@@ -204,7 +204,10 @@ const SHOP=[
 
 // ─── Audio ───
 let audioCtx=null;
-function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+function initAudio(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended')audioCtx.resume();
+}
 function playTone(freq,dur,type,vol){
   if(!audioCtx)return;
   try{
@@ -216,13 +219,13 @@ function playTone(freq,dur,type,vol){
     o.start();o.stop(audioCtx.currentTime+dur);
   }catch(e){}
 }
-function sfxAttack(){playTone(200,0.1,'sawtooth',0.1);setTimeout(()=>playTone(120,0.08,'square',0.08),40);}
-function sfxPickup(){playTone(600,0.08,'sine',0.1);setTimeout(()=>playTone(900,0.1,'sine',0.1),60);}
-function sfxLevelUp(){playTone(400,0.1,'square',0.08);setTimeout(()=>playTone(500,0.1,'square',0.08),80);setTimeout(()=>playTone(700,0.15,'square',0.1),160);}
-function sfxHurt(){playTone(100,0.15,'sawtooth',0.1);}
-function sfxDeath(){playTone(300,0.15,'sawtooth',0.1);setTimeout(()=>playTone(200,0.15,'sawtooth',0.1),120);setTimeout(()=>playTone(100,0.3,'sawtooth',0.1),240);}
-function sfxDescend(){playTone(300,0.15,'sine',0.08);setTimeout(()=>playTone(200,0.2,'sine',0.08),100);}
-function sfxVictory(){[0,100,200,300,400,500].forEach((d,i)=>setTimeout(()=>playTone(400+i*80,0.15,'sine',0.1),d));}
+function sfxAttack(){playTone(200,0.12,'sawtooth',0.25);setTimeout(()=>playTone(120,0.1,'square',0.2),40);}
+function sfxPickup(){playTone(660,0.1,'sine',0.25);setTimeout(()=>playTone(990,0.12,'sine',0.25),60);}
+function sfxLevelUp(){playTone(440,0.12,'square',0.2);setTimeout(()=>playTone(550,0.12,'square',0.2),80);setTimeout(()=>playTone(770,0.18,'square',0.25),160);}
+function sfxHurt(){playTone(120,0.18,'sawtooth',0.25);}
+function sfxDeath(){playTone(300,0.18,'sawtooth',0.25);setTimeout(()=>playTone(200,0.18,'sawtooth',0.2),120);setTimeout(()=>playTone(100,0.35,'sawtooth',0.25),240);}
+function sfxDescend(){playTone(330,0.18,'sine',0.2);setTimeout(()=>playTone(220,0.22,'sine',0.2),100);}
+function sfxVictory(){[0,100,200,300,400,500].forEach((d,i)=>setTimeout(()=>playTone(440+i*88,0.18,'sine',0.25),d));}
 
 // ─── Particles ───
 let particles=[];
