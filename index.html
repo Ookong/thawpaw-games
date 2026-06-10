@@ -194,6 +194,29 @@ const THUMB_ART = {
       <text x="100" y="170" text-anchor="middle" font-size="11" fill="#886644">⚡ 🌑 💨 🌊 🐾</text>
     </svg>`
   },
+  'starclan-trial': {
+    bg: 'linear-gradient(135deg, #0a0514 0%, #1a0d2e 40%, #0a0514 100%)',
+    svg: `<svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="scg" cx="50%" cy="35%" r="50%">
+          <stop offset="0%" stop-color="#cc44ff" stop-opacity=".7"/>
+          <stop offset="100%" stop-color="#cc44ff" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="100" cy="70" r="50" fill="url(#scg)"/>
+      <text x="100" y="50" text-anchor="middle" font-size="20" fill="#ffd866" font-weight="bold">⚔️</text>
+      <text x="100" y="90" text-anchor="middle" font-size="38">🌟</text>
+      <text x="100" y="125" text-anchor="middle" font-size="12" fill="#cc44ff" font-weight="bold">星族的考验</text>
+      <text x="100" y="142" text-anchor="middle" font-size="9" fill="#8844cc">STARCLAN'S TRIAL</text>
+      <g fill="#cc44ff" opacity=".25">
+        <circle cx="35" cy="40" r="1.5"/><circle cx="165" cy="50" r="2"/>
+        <circle cx="45" cy="150" r="1"/><circle cx="155" cy="140" r="1.5"/>
+        <circle cx="30" cy="90" r="1"/><circle cx="170" cy="85" r="1"/>
+        <circle cx="80" cy="165" r="1.2"/><circle cx="120" cy="170" r="1"/>
+      </g>
+      <text x="100" y="175" text-anchor="middle" font-size="10" fill="#663399">🌙 ⚔️ 🐱 👹</text>
+    </svg>`
+  },
   dungeon: {
     bg: 'linear-gradient(135deg, #0a0a14 0%, #1a0d2e 40%, #0a0a14 100%)',
     svg: `<svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -300,7 +323,7 @@ const DEFAULT_THUMB = {
         <h2>${g.name}</h2>
         <p>${g.description}</p>
         <div class="card-footer">
-          <span class="tag">${g.id==='warrior-quest'?'Text Adventure':'Roguelike'}</span>
+          <span class="tag">${g.id==='warrior-quest'?'Text Adventure':g.id==='starclan-trial'?'RPG':'Roguelike'}</span>
         </div>
       </div>`;
     grid.appendChild(card);
