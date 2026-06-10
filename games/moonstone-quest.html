@@ -127,20 +127,20 @@ const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
 
 // ─── Enemy data ───
 const EDATA={
-  rat:{ch:'r',col:'#999999',hp:8,atk:2,exp:5,name:'Rat'},
-  badger:{ch:'B',col:'#cc4444',hp:18,atk:5,exp:12,name:'Badger'},
-  fox:{ch:'F',col:'#ddaa33',hp:14,atk:4,exp:10,name:'Fox'},
-  snake:{ch:'s',col:'#44cc44',hp:16,atk:6,exp:14,name:'Snake'},
-  shadow_cat:{ch:'S',col:'#bb44bb',hp:22,atk:7,exp:18,name:'Shadow Cat'},
-  dark_warrior:{ch:'D',col:'#ff4444',hp:30,atk:10,exp:25,name:'Dark Warrior'},
-  owl:{ch:'O',col:'#44bbbb',hp:12,atk:3,exp:8,name:'Owl'},
-  spider:{ch:'x',col:'#aa44aa',hp:10,atk:3,exp:7,name:'Spider'},
-  adder:{ch:'a',col:'#ccaa33',hp:15,atk:8,exp:13,name:'Adder'},
-  dog:{ch:'G',col:'#ff6644',hp:28,atk:9,exp:20,name:'Dog'},
-  twoleg_trap:{ch:'T',col:'#dddddd',hp:35,atk:5,exp:22,name:'Twoleg Trap'},
-  rogue:{ch:'R',col:'#4466dd',hp:24,atk:8,exp:20,name:'Rogue'},
-  badger_lord:{ch:'W',col:'#ff4444',hp:45,atk:12,exp:35,name:'Badger Lord'},
-  tigerstar_spirit:{ch:'☠',col:'#dd44ff',hp:60,atk:15,exp:50,name:'Tigerstar Spirit'},
+  rat:{ch:'🐭',col:'#999999',hp:8,atk:2,exp:5,name:'Rat'},
+  badger:{ch:'🐻',col:'#cc4444',hp:18,atk:5,exp:12,name:'Badger'},
+  fox:{ch:'🦊',col:'#ddaa33',hp:14,atk:4,exp:10,name:'Fox'},
+  snake:{ch:'🐍',col:'#44cc44',hp:16,atk:6,exp:14,name:'Snake'},
+  shadow_cat:{ch:'🐈‍⬛',col:'#bb44bb',hp:22,atk:7,exp:18,name:'Shadow Cat'},
+  dark_warrior:{ch:'🗡️',col:'#ff4444',hp:30,atk:10,exp:25,name:'Dark Warrior'},
+  owl:{ch:'🦉',col:'#44bbbb',hp:12,atk:3,exp:8,name:'Owl'},
+  spider:{ch:'🕷️',col:'#aa44aa',hp:10,atk:3,exp:7,name:'Spider'},
+  adder:{ch:'🐉',col:'#ccaa33',hp:15,atk:8,exp:13,name:'Adder'},
+  dog:{ch:'🐕',col:'#ff6644',hp:28,atk:9,exp:20,name:'Dog'},
+  twoleg_trap:{ch:'🪤',col:'#dddddd',hp:35,atk:5,exp:22,name:'Twoleg Trap'},
+  rogue:{ch:'😼',col:'#4466dd',hp:24,atk:8,exp:20,name:'Rogue'},
+  badger_lord:{ch:'👑',col:'#ff4444',hp:45,atk:12,exp:35,name:'Badger Lord'},
+  tigerstar_spirit:{ch:'👻',col:'#dd44ff',hp:60,atk:15,exp:50,name:'Tigerstar Spirit'},
 };
 const FLOOR_ENEMIES={
   1:['rat','rat'],2:['rat','rat','spider'],3:['rat','badger','fox'],
@@ -664,7 +664,8 @@ function drawTile(x,y,ch,bg,fg){
   ctx.fillRect(px,py,TILE,TILE);
   if(ch){
     ctx.fillStyle=fg||'#ccc';
-    ctx.font=`bold ${TILE-6}px monospace`;
+    const isEmoji=ch.length>1||/\p{Emoji}/u.test(ch);
+    ctx.font=`${isEmoji?TILE-2:TILE-6}px ${isEmoji?'sans-serif':'monospace'}`;
     ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(ch,px+TILE/2,py+TILE/2+1);
   }
@@ -748,8 +749,8 @@ function renderMap(){
           drawTile(x,y,null,'#1a1a2e');
           const d=EDATA[en.type];
           ctx.fillStyle=en.stunned?'#666':d.col;
-          ctx.font=`bold ${TILE-6}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
-          ctx.fillText(en.stunned?'z':d.ch,x*TILE+TILE/2,y*TILE+TILE/2+1);
+          ctx.font=`${TILE-4}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillText(en.stunned?'💤':d.ch,x*TILE+TILE/2,y*TILE+TILE/2+1);
           // hp bar
           if(en.hp<en.maxHp){
             const bw=TILE-4, bh=3;
