@@ -836,16 +836,22 @@ let animTime=0;
 function resizeCanvas(){
   const wrap=document.getElementById('canvasWrap');
   const cw=wrap.clientWidth, ch=wrap.clientHeight;
-  canvas.width=MAP_W*TILE;canvas.height=MAP_H*TILE;
   var maxScale=1.5;
   // If touch controls are shown, leave room at bottom
   var tc=document.getElementById('touchControls');
   if(tc && tc.classList.contains('active')){
     maxScale=1.0;
   }
-  const scale=Math.min(cw/(MAP_W*TILE),ch/(MAP_H*TILE),maxScale);
-  canvas.style.width=Math.floor(MAP_W*TILE*scale)+'px';
-  canvas.style.height=Math.floor(MAP_H*TILE*scale)+'px';
+  const cssW=MAP_W*TILE, cssH=MAP_H*TILE;
+  const scale=Math.min(cw/cssW,ch/cssH,maxScale);
+  const dispW=Math.floor(cssW*scale), dispH=Math.floor(cssH*scale);
+  // High-DPI rendering: internal buffer is dispW * dpr
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  canvas.style.width=dispW+'px';
+  canvas.style.height=dispH+'px';
+  canvas.width=Math.floor(dispW*dpr);
+  canvas.height=Math.floor(dispH*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 
 function drawTile(x,y,ch,bg,fg){
