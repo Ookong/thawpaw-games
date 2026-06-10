@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <title>🏰 Dungeon Explore — Thawpaw Games</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -14,6 +17,8 @@ body {
   height:100vh; height:100dvh;
   display:flex; flex-direction:column;
   overflow:hidden;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
   user-select:none; -webkit-user-select:none;
   touch-action:none;
 }
@@ -45,9 +50,13 @@ canvas { display:block; border-radius:8px; }
 #side .playerBlock.p2 .playerHead .phName { color:#ffd9a8; }
 #side .playerBlock.dead .playerHead .phName { color:#888; }
 #side .playerHead .phIcon { font-size:18px; }
-#hpBar { width:100%; height:10px; background:#1a1a2a; border:1px solid #2a2a3a; border-radius:3px; overflow:hidden; margin:2px 0 4px; }
+#hpBar { width:100%; height:10px; background:#1a1a2a; border:1px solid #2a2a3a; border-radius:3px; overflow:hidden;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom); margin:2px 0 4px; }
 #hpFill { height:100%; background:linear-gradient(90deg,#44cc44,#88ff88); transition:width .25s; }
-#hpBar2 { width:100%; height:10px; background:#1a1a2a; border:1px solid #2a2a3a; border-radius:3px; overflow:hidden; margin:2px 0 4px; }
+#hpBar2 { width:100%; height:10px; background:#1a1a2a; border:1px solid #2a2a3a; border-radius:3px; overflow:hidden;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom); margin:2px 0 4px; }
 #hpFill2 { height:100%; background:linear-gradient(90deg,#ffaa44,#ffdd66); transition:width .25s; }
 #msgLog { margin-top:10px; flex:1; overflow-y:auto; max-height:160px; background:#08080f; border:1px solid #1a1a2a; border-radius:4px; padding:5px 7px; }
 #msgLog .msg { color:#999; font-size:11px; margin:1px 0; word-wrap:break-word; font-family:monospace; }
@@ -70,10 +79,14 @@ body.touch-active #mobileHud { display:block; }
 #mobileHud .hud-val.gold { color:#ffcc44; }
 #mobileHud .hud-val.atk { color:#ff8866; }
 #mobileHud .hud-val.def { color:#66aaff; }
-#mobileHud .hud-hpbar { flex:1; height:8px; background:#1a1a2a; border:1px solid #333; border-radius:2px; overflow:hidden; min-width:40px; }
+#mobileHud .hud-hpbar { flex:1; height:8px; background:#1a1a2a; border:1px solid #333; border-radius:2px; overflow:hidden;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom); min-width:40px; }
 #mobileHud .hud-hpfill { height:100%; background:linear-gradient(90deg,#44cc44,#88ff88); transition:width .25s; }
 #mobileHud .hud-hpfill.p2 { background:linear-gradient(90deg,#ffaa44,#ffdd66); }
-#mobileHud .hud-msg { color:#aaa; font-size:11px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; max-width:100%; margin-top:3px; }
+#mobileHud .hud-msg { color:#aaa; font-size:11px; overflow:hidden;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom); white-space:nowrap; text-overflow:ellipsis; max-width:100%; margin-top:3px; }
 
 /* ── Touch controls overlay ── */
 #touchControls { display:none; position:fixed; bottom:0; left:0; right:0; height:200px; z-index:40; pointer-events:none; }
