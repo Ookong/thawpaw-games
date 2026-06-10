@@ -101,9 +101,14 @@ canvas { display:block; }
 #shopCloseBtn { position:absolute; top:10px; right:14px; background:none; border:none; color:#888; font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; }
 #shopCloseBtn:hover { color:#ff6644; background:rgba(255,255,255,.05); }
 #controls.touch-active { display:block; text-align:center; }
+
+/* ── Floating Ice button ── */
+#iceBtn{position:fixed;z-index:999;width:44px;height:44px;border-radius:50%;background:rgba(170,220,255,.18);border:1.5px solid rgba(170,220,255,.35);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;transition:background .15s;}
+#iceBtn:active{background:rgba(170,220,255,.35);}
 </style>
 </head>
 <body>
+<div id="iceBtn">❄️</div>
 <!-- Mobile HUD (shown on touch devices) -->
 <div id="mobileHud">
   <div class="hud-row">
@@ -1138,6 +1143,42 @@ if(!loadGame()){
 setInterval(()=>{if(G.state==='playing'||G.state==='dead'||G.state==='won')saveGame();},5000);
 
 requestAnimationFrame(loop);
+
+// ── Floating Ice button (draggable, snaps to edge) ──
+(function(){
+var b=document.getElementById('iceBtn');if(!b)return;
+var drag=false,moved=false,sx,sy,ox,oy;
+b.addEventListener('pointerdown',function(e){
+  drag=true;moved=false;
+  sx=e.clientX;sy=e.clientY;
+  var r=b.getBoundingClientRect();ox=e.clientX-r.left;oy=e.clientY-r.top;
+  b.setPointerCapture(e.pointerId);e.preventDefault();
+});
+b.addEventListener('pointermove',function(e){
+  if(!drag)return;
+  var dx=e.clientX-sx,dy=e.clientY-sy;
+  if(Math.abs(dx)>4||Math.abs(dy)>4)moved=true;
+  var x=e.clientX-ox,y=e.clientY-oy;
+  b.style.left=x+'px';b.style.top=y+'px';b.style.right='auto';b.style.bottom='auto';
+});
+b.addEventListener('pointerup',function(e){
+  if(!drag)return;drag=false;
+  if(!moved){location.href='../index.html';return;}
+  // snap to nearest edge (left or right)
+  var r=b.getBoundingClientRect();
+  var midY=r.top+r.height/2;
+  if(r.left+r.width/2<window.innerWidth/2){
+    b.style.left='6px';b.style.right='auto';
+  }else{
+    b.style.left='auto';b.style.right='6px';
+  }
+  // clamp vertical
+  var maxY=window.innerHeight-r.height-6;
+  var fy=Math.max(6,Math.min(parseInt(b.style.top)||r.top,maxY));
+  b.style.top=fy+'px';b.style.bottom='auto';
+});
+})();
+
 </script>
 </body>
 </html>
