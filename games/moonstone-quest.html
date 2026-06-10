@@ -41,10 +41,10 @@ canvas { image-rendering:pixelated; display:block; }
 
 /* Action buttons (right side) */
 #touchActions { position:absolute; bottom:15px; right:15px; display:grid; grid-template-columns:repeat(2,1fr); gap:8px; pointer-events:auto; }
-#touchActions button { width:60px; height:52px; background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.18); border-radius:12px; color:#ccc; font-size:12px; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+#touchActions button { width:72px; height:62px; background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.18); border-radius:12px; color:#ccc; font-size:12px; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
 #touchActions button:active { background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.35); }
-#touchActions button .icon { font-size:18px; }
-#touchActions button .label { font-size:9px; opacity:.7; }
+#touchActions button .icon { font-size:22px; }
+#touchActions button .label { font-size:10px; opacity:.7; }
 
 /* ── Mobile layout ── */
 @media (max-width:700px) {
@@ -65,8 +65,8 @@ canvas { image-rendering:pixelated; display:block; }
   #joystickBase { width:100px; height:100px; }
   #joystickKnob { width:40px; height:40px; }
   #touchActions { bottom:8px; right:8px; gap:5px; }
-  #touchActions button { width:52px; height:44px; }
-  #touchActions button .icon { font-size:16px; }
+  #touchActions button { width:64px; height:54px; }
+  #touchActions button .icon { font-size:20px; }
 }
 
 /* Desktop controls (hidden on touch) */
