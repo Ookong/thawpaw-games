@@ -24,6 +24,14 @@
       "icon": "dungeon",
       "description": "Crawl through endless dungeons! Slay monsters, collect gold, go deeper!",
       "color": "#aa44ff"
+    },
+    {
+      "id": "warrior-quest",
+      "name": "Warrior Quest",
+      "file": "games/warrior-quest.html",
+      "icon": "warrior-quest",
+      "description": "Choose your Clan! A text adventure in the Warrior Cats world",
+      "color": "#ff6644"
     }
   ]
 }
