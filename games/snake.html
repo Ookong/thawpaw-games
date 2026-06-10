@@ -362,8 +362,7 @@ const SKINS = [
 const BOARDS = [
   { id:'default', name:'默认',    emoji:'⬛', bg:'#0a0a14', grid:'rgba(255,255,255,.04)', priceApples:0 },
   { id:'fire',    name:'火焰',    emoji:'🔥', bg:'#1a0a0a', grid:'rgba(255,80,20,.08)',  priceApples:10 },
-  { id:'wave',    name:'海浪',    emoji:'🌊', bg:'#0a0a1a', grid:'rgba(60,120,255,.07)', priceApples:10 },
-  { id:'ocean',   name:'海浪',    emoji:'🌊', bg:'#0a0a1a', grid:'rgba(68,136,255,.08)', priceApples:10 },
+  { id:'wave',    name:'海浪',    emoji:'🌊', bg:'#0a0a1a', grid:'rgba(68,136,255,.08)', priceApples:10 },
   { id:'stars',   name:'星空',    emoji:'✨', bg:'#05050f', grid:'rgba(200,200,255,.06)', priceApples:15 },
   { id:'cloud',   name:'白云',    emoji:'☁️', bg:'#0e0e18', grid:'rgba(220,220,240,.07)', priceApples:20 },
   { id:'rainbow', name:'彩虹',    emoji:'🌈', bg:'#0a0a14', grid:'rgba(255,100,200,.06)', priceApples:30 },
@@ -635,6 +634,7 @@ function buildShop() {
         '<div class="bp-emoji">' + bd.emoji + '</div>' +
         '<div class="bp-name">' + bd.name + '</div>' +
         '<div class="bp-badge">' + badge + '</div>' +
+        '<div style="width:100%;height:6px;border-radius:3px;margin-top:4px;background:' + bd.bg + ';border:1px solid ' + bd.grid + '"></div>' +
       '</div>';
     }).join('');
   } else {
