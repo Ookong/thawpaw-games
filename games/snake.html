@@ -101,6 +101,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .game-page .score-bar span{background:var(--card);padding:4px 12px;border-radius:20px;}
 .game-back{position:absolute;top:10px;left:10px;cursor:pointer;font-size:22px;z-index:10;}
 
+/* ===== JOYSTICK ===== */
+.joystick-zone{display:none;position:fixed;bottom:30px;left:30px;z-index:300;}
+.joystick-zone.visible{display:block;}
+.joystick-base{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.25);position:relative;}
+.joystick-knob{width:50px;height:50px;border-radius:50%;background:rgba(233,69,96,0.7);border:2px solid rgba(255,255,255,0.3);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;transition:none;}
+
 /* ===== MODAL / OVERLAY ===== */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;}
 .modal-overlay.active{display:flex;}
@@ -281,6 +287,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   <canvas id="game-canvas"></canvas>
 </div>
 
+<!-- ===== JOYSTICK (touch devices only) ===== -->
+<div class="joystick-zone" id="joystick-zone">
+  <div class="joystick-base" id="joystick-base">
+    <div class="joystick-knob" id="joystick-knob"></div>
+  </div>
+</div>
+
 <!-- ===== BOTTOM BAR ===== -->
 <div class="bottom-bar" id="bottom-bar">
   <div class="tab" onclick="openModal('bank')"><span class="icon">🏦</span>银行</div>
@@ -367,19 +380,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 // ===== DATA =====
 const AVATARS = ['🐍','🐱','🐶','🐸','🦊','🐼','🐰','🦁','🐯','🐻','🐨','🐵','🦄','🐲','🦋','🐢'];
 const SHOP_DATA = {
-  '皮肤': [
-    {id:'skin_classic',name:'经典蛇',icon:'🐍',price:0,currency:'gold',desc:'默认绿色蛇'},
-    {id:'skin_fire',name:'火焰蛇',icon:'🔥',price:50,currency:'gold',desc:'燃烧的红色蛇'},
-    {id:'skin_ice',name:'冰霜蛇',icon:'❄️',price:50,currency:'gold',desc:'冰蓝色的蛇'},
-    {id:'skin_rainbow',name:'彩虹蛇',icon:'🌈',price:3,currency:'apple',desc:'七彩斑斓的蛇'},
-  ],
-  '加速': [
-    {id:'speed_boost',name:'加速药水',icon:'⚡',price:10,currency:'gold',desc:'游戏内临时加速',count:0},
-  ],
-  '道具': [
-    {id:'shield',name:'护盾',icon:'🛡️',price:20,currency:'gold',desc:'抵挡一次碰撞',count:0},
-    {id:'magnet',name:'磁铁',icon:'🧲',price:2,currency:'apple',desc:'自动吸附附近食物',count:0},
-  ],
+  '敬请期待': []
 };
 const CURRENCY_NAMES = {gold:'💰',apple:'🍎'};
 const BAG_CATEGORIES = ['全部','皮肤','道具'];
@@ -421,6 +422,10 @@ function showPage(name){
   bb.style.display = (name==='home') ? 'flex' : 'none';
   if(name==='home') refreshHome();
   if(name==='profile') refreshProfile();
+  // Show joystick only on game page for touch devices
+  if(isTouchDevice){
+    joystickZone.classList.toggle('visible', name==='game');
+  }
 }
 
 function refreshHome(){
@@ -652,8 +657,11 @@ function placeFood(){
 function gameTick(){
   if(!gameActive) return;
   const head = {x:snake[0].x+direction.x, y:snake[0].y+direction.y};
-  // Wall check
-  if(head.x<0||head.x>=gridSize||head.y<0||head.y>=gridSize){gameOver();return;}
+  // Wall wrap
+  if(head.x<0) head.x=gridSize-1;
+  if(head.x>=gridSize) head.x=0;
+  if(head.y<0) head.y=gridSize-1;
+  if(head.y>=gridSize) head.y=0;
   // Self check
   if(snake.some(s=>s.x===head.x&&s.y===head.y)){gameOver();return;}
   snake.unshift(head);
@@ -735,10 +743,11 @@ document.addEventListener('keydown', e=>{
   }
 });
 
-// Touch controls
+// Touch swipe controls (non-joystick fallback)
 let touchStart = null;
 document.addEventListener('touchstart', e=>{
   if(currentPage!=='game') return;
+  if(e.target.closest('.joystick-zone')) return;
   touchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY};
 });
 document.addEventListener('touchend', e=>{
@@ -753,6 +762,53 @@ document.addEventListener('touchend', e=>{
   touchStart = null;
 });
 
+// ===== JOYSTICK =====
+const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+const joystickZone = document.getElementById('joystick-zone');
+const joystickBase = document.getElementById('joystick-base');
+const joystickKnob = document.getElementById('joystick-knob');
+let joystickActive = false;
+let joystickCenter = {x:0,y:0};
+const JOYSTICK_RADIUS = 35;
+
+if(isTouchDevice){
+  joystickZone.classList.add('visible');
+  joystickBase.addEventListener('touchstart', e=>{
+    e.preventDefault();
+    joystickActive = true;
+    const rect = joystickBase.getBoundingClientRect();
+    joystickCenter = {x:rect.left+rect.width/2, y:rect.top+rect.height/2};
+    handleJoystickMove(e.touches[0]);
+  });
+  document.addEventListener('touchmove', e=>{
+    if(!joystickActive) return;
+    e.preventDefault();
+    handleJoystickMove(e.touches[0]);
+  }, {passive:false});
+  document.addEventListener('touchend', e=>{
+    if(!joystickActive) return;
+    joystickActive = false;
+    joystickKnob.style.transform = 'translate(-50%,-50%)';
+  });
+}
+
+function handleJoystickMove(touch){
+  const dx = touch.clientX - joystickCenter.x;
+  const dy = touch.clientY - joystickCenter.y;
+  const dist = Math.sqrt(dx*dx+dy*dy);
+  const clampedDist = Math.min(dist, JOYSTICK_RADIUS);
+  const angle = Math.atan2(dy, dx);
+  const nx = Math.cos(angle)*clampedDist;
+  const ny = Math.sin(angle)*clampedDist;
+  joystickKnob.style.transform = `translate(calc(-50% + ${nx}px), calc(-50% + ${ny}px))`;
+  if(dist > 15 && gameActive){
+    let d;
+    if(Math.abs(dx)>Math.abs(dy)) d = dx>0?{x:1,y:0}:{x:-1,y:0};
+    else d = dy>0?{x:0,y:1}:{x:0,y:-1};
+    if(!(d.x===-direction.x && d.y===-direction.y)) direction = d;
+  }
+}
+
 // Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(el=>{
   el.addEventListener('click', e=>{
@@ -763,6 +819,23 @@ document.querySelectorAll('.modal-overlay').forEach(el=>{
 // ===== INIT =====
 loadPlayer();
 refreshHome();
+
+// ===== AUTO FULLSCREEN =====
+function tryFullscreen(){
+  const el = document.documentElement;
+  const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+  if(rfs){
+    rfs.call(el).catch(()=>{});
+  }
+}
+// Auto fullscreen on first user interaction
+let fullscreenDone = false;
+document.addEventListener('click', ()=>{
+  if(!fullscreenDone){fullscreenDone=true; tryFullscreen();}
+}, {once:true});
+document.addEventListener('touchstart', ()=>{
+  if(!fullscreenDone){fullscreenDone=true; tryFullscreen();}
+}, {once:true});
 </script>
 </body>
 </html>
