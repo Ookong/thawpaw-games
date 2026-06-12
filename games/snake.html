@@ -1,1388 +1,768 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<title>🐍 Snake — Thawpaw Games [v2]</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake Game - Thawpaw Games</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html { height:100%; }
-body {
-  background:#0a0a14;
-  color:#e0e0ee;
-  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-  height:100vh; height:100dvh;
-  display:flex; flex-direction:column;
-  overflow:hidden;
-  user-select:none; -webkit-user-select:none;
-  touch-action:none;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom);
-  padding-left:env(safe-area-inset-left);
-  padding-right:env(safe-area-inset-right);
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#1a1a2e;--card:#16213e;--card2:#0f3460;--accent:#e94560;
+  --gold:#ffd700;--apple:#4caf50;--text:#eee;--text2:#aaa;
+  --radius:12px;
 }
-a { color:#88aaff; text-decoration:none; }
-button { font-family:inherit; cursor:pointer; border:none; outline:none; }
-button:active { transform:scale(0.96); }
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh;}
 
-/* ── Fixed elements ── */
-#back { position:fixed; top:8px; left:10px; z-index:100; font-size:13px; color:#6688aa; padding:4px 6px; }
-#back:hover { color:#aaccff; }
+/* ===== PAGES ===== */
+.page{display:none;width:100%;min-height:100vh;}
+.page.active{display:flex;flex-direction:column;}
 
-/* ── Screens (main menu, bank, shop, backpack, settings) ── */
-.screen { display:none; position:fixed; inset:0; z-index:60; align-items:center; justify-content:center; background:rgba(5,5,12,.92); backdrop-filter:blur(6px); flex-direction:column; }
-.screen.active { display:flex; }
-.screen-box { background:#0e0e1a; border:2px solid #44cc44; border-radius:16px; padding:24px 28px; max-width:420px; width:92%; text-align:center; box-shadow:0 8px 40px rgba(68,204,68,.2); max-height:90vh; overflow-y:auto; }
-.screen-box h1 { font-size:1.7rem; margin-bottom:4px; letter-spacing:-.02em; }
-.screen-box .subtitle { color:#aaa; font-size:.9rem; margin-bottom:16px; }
+/* ===== TOP BAR ===== */
+.top-bar{display:flex;align-items:center;padding:10px 16px;background:var(--card);gap:12px;cursor:pointer;min-height:56px;}
+.profile-bubble{display:flex;align-items:center;gap:10px;flex:1;}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid var(--accent);}
+.profile-info{display:flex;flex-direction:column;gap:2px;}
+.profile-info .name-row{display:flex;align-items:center;gap:6px;}
+.profile-info .nickname{font-weight:600;font-size:15px;}
+.level-badge{font-size:11px;background:var(--accent);padding:1px 6px;border-radius:8px;}
+.level-bar-wrap{height:4px;background:#333;border-radius:2px;width:80px;margin-top:2px;}
+.level-bar{height:100%;background:var(--gold);border-radius:2px;width:30%;transition:width .3s;}
 
-/* ── Stat bar (shown on menu + sub-screens) ── */
-.stat-bar { display:flex; justify-content:center; gap:16px; margin-bottom:16px; font-size:.95rem; flex-wrap:wrap; }
-.stat-bar .stat { display:flex; align-items:center; gap:4px; }
-.stat-bar .stat .icon { font-size:1rem; }
-.stat-bar .stat .val { font-weight:700; }
-.stat-bar .gold-val { color:#ffcc44; }
-.stat-bar .apple-val { color:#ff6644; }
-.stat-bar .hi-val { color:#ffcc44; }
+/* ===== BOTTOM BAR (功能区) ===== */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--card);display:flex;align-items:center;justify-content:space-around;border-top:1px solid #333;z-index:100;}
+.bottom-bar .tab{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:6px 16px;border-radius:8px;transition:background .2s;font-size:12px;}
+.bottom-bar .tab:hover,.bottom-bar .tab.active{background:var(--card2);}
+.bottom-bar .tab .icon{font-size:20px;}
 
-/* ── Menu buttons ── */
-.menu-btn { display:block; width:100%; padding:14px; margin:6px 0; background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.12); border-radius:12px; color:#ddd; font-size:1rem; text-align:left; transition:background .15s,border-color .15s; }
-.menu-btn:hover, .menu-btn:active { background:rgba(68,204,68,.12); border-color:#44cc44; }
-.menu-btn .btn-icon { margin-right:8px; font-size:1.1rem; }
+/* ===== HOME PAGE LAYOUT ===== */
+.home-content{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;padding:12px;padding-bottom:64px;min-height:calc(100vh - 56px);}
+.home-content .col{display:flex;flex-direction:column;gap:8px;}
 
-/* ── Settings ── */
-.setting-group { margin:14px 0; text-align:left; }
-.setting-group .label { color:#aaa; font-size:.85rem; margin-bottom:8px; font-weight:600; }
-.option-row { display:flex; gap:8px; }
-.option-card { flex:1; padding:10px 6px; background:rgba(255,255,255,.05); border:1.5px solid rgba(255,255,255,.1); border-radius:10px; text-align:center; color:#bbb; font-size:.9rem; cursor:pointer; transition:all .15s; }
-.option-card.selected { background:rgba(68,204,68,.15); border-color:#44cc44; color:#88ee88; }
-.option-card .opt-title { font-weight:700; font-size:1rem; }
-.option-card .opt-sub { font-size:.75rem; color:#888; margin-top:2px; }
-.option-card.selected .opt-sub { color:#66aa66; }
+/* Left 1/4 */
+.col-left{justify-content:center;align-items:center;color:var(--text2);font-size:13px;}
 
-.start-btn { display:block; width:100%; padding:14px; margin-top:18px; background:linear-gradient(135deg,#44cc44,#33aa33); border-radius:12px; color:#fff; font-size:1.1rem; font-weight:700; letter-spacing:.05em; }
+/* Left-center 1/4 - Skin */
+.col-lc{justify-content:center;align-items:center;}
+.skin-display{background:var(--card2);border-radius:var(--radius);padding:20px;text-align:center;width:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.skin-display .skin-preview{width:80px;height:80px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;}
+.skin-label{font-size:13px;color:var(--text2);}
 
-/* ── Bank ── */
-.bank-row { display:flex; align-items:center; justify-content:center; gap:8px; margin:10px 0; flex-wrap:wrap; }
-.bank-input { width:100px; padding:8px 10px; background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.15); border-radius:8px; color:#fff; font-size:1rem; text-align:center; font-family:inherit; }
-.bank-input:focus { border-color:#44cc44; outline:none; }
-.bank-convert-btn { padding:10px 20px; background:linear-gradient(135deg,#ffcc44,#ddaa22); border-radius:10px; color:#222; font-weight:700; font-size:.95rem; }
-.bank-info { color:#888; font-size:.85rem; margin:8px 0; }
+/* Right-center 1/4 - Modes */
+.col-rc{gap:8px;}
+.mode-card{background:var(--card2);border-radius:var(--radius);padding:16px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .15s;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;}
+.mode-card:hover{transform:scale(1.03);box-shadow:0 0 12px rgba(233,69,96,.3);}
+.mode-card .mode-icon{font-size:32px;}
+.mode-card .mode-name{font-weight:600;font-size:14px;}
+.mode-card .mode-desc{font-size:11px;color:var(--text2);}
 
-/* ── Shop ── */
-.shop-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:16px 0; }
-.shop-card { background:rgba(255,255,255,.04); border:1.5px dashed rgba(255,255,255,.1); border-radius:10px; padding:16px 8px; text-align:center; color:#555; font-size:.85rem; min-height:90px; display:flex; align-items:center; justify-content:center; }
+/* Right 1/4 - Activities */
+.col-right{gap:8px;}
+.col-right .top-row{display:flex;gap:6px;}
+.col-right .top-row .mini-card{flex:1;background:var(--card2);border-radius:var(--radius);padding:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;transition:transform .15s;}
+.col-right .top-row .mini-card:hover{transform:scale(1.05);}
+.col-right .top-row .mini-card .icon{font-size:22px;display:block;margin-bottom:4px;}
+.hot-events{background:var(--card2);border-radius:var(--radius);padding:14px;flex:1;overflow-y:auto;}
+.hot-events h3{font-size:13px;margin-bottom:8px;color:var(--gold);}
+.hot-events .event-item{padding:8px;border-bottom:1px solid #333;font-size:12px;color:var(--text2);}
+.hot-events .event-item:last-child{border-bottom:none;}
 
-/* ── Backpack ── */
-.bp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:16px 0; }
-.bp-card { background:rgba(255,255,255,.05); border:2px solid rgba(255,255,255,.1); border-radius:10px; padding:12px 6px; text-align:center; cursor:pointer; transition:all .15s; }
-.bp-card.equipped { border-color:#ffcc44; background:rgba(255,204,68,.1); box-shadow:0 0 12px rgba(255,204,68,.2); }
-.bp-card.owned { cursor:pointer; }
-.bp-card.owned:hover { border-color:#88ee88; background:rgba(136,238,136,.06); }
-.bp-card.locked { opacity:.5; cursor:pointer; }
-.bp-card.locked:hover { opacity:.75; }
-.shop-tabs { display:flex; gap:8px; margin:8px 0 12px; }
-.shop-tab { padding:8px 16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:8px; color:#aaa; font-size:.9rem; cursor:default; }
-.shop-tab.active { background:rgba(255,204,68,.15); border-color:rgba(255,204,68,.4); color:#ffcc44; font-weight:700; }
-.bp-card .bp-emoji { font-size:2rem; margin-bottom:4px; }
-.bp-card .bp-name { font-size:.85rem; color:#ccc; font-weight:600; }
-.bp-card .bp-badge { font-size:.7rem; margin-top:4px; color:#ffcc44; }
-.bp-card.locked .bp-name { color:#666; }
+/* ===== PROFILE PAGE ===== */
+.profile-page{align-items:center;padding:20px;padding-bottom:72px;gap:16px;}
+.profile-page .big-avatar{width:90px;height:90px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:48px;border:3px solid var(--accent);cursor:pointer;transition:transform .2s;position:relative;}
+.profile-page .big-avatar:hover{transform:scale(1.05);}
+.profile-page .big-avatar::after{content:'📷';position:absolute;bottom:0;right:0;font-size:16px;}
+.profile-page .name-section{text-align:center;}
+.profile-page .name-section .name-line{display:flex;align-items:center;justify-content:center;gap:8px;}
+.profile-page .name-section .nickname{font-size:20px;font-weight:700;}
+.profile-page .name-section .edit-btn{cursor:pointer;font-size:16px;}
+.profile-page .snake-id{color:var(--text2);font-size:13px;margin-top:4px;}
+.profile-page .bio{color:var(--text2);font-size:13px;margin-top:2px;min-height:18px;}
+.profile-page .level-section{width:100%;max-width:300px;}
+.profile-page .level-info{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.profile-page .level-bar-wrap{height:8px;background:#333;border-radius:4px;}
+.profile-page .level-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:4px;width:30%;}
+.back-btn{position:absolute;top:12px;left:12px;cursor:pointer;font-size:24px;z-index:10;}
 
-/* ── Game area ── */
-#gameArea { display:none; flex:1; min-height:0; }
-#gameArea.active { display:flex; }
-#wrap { display:flex; flex:1; min-height:0; }
-#canvasWrap { flex:1; display:flex; align-items:center; justify-content:center; min-width:0; position:relative; }
-canvas { display:block; border-radius:8px; }
+/* ===== SETTINGS PAGE (调试界面) ===== */
+.settings-page{padding:20px;padding-bottom:72px;gap:20px;}
+.settings-page h2{text-align:center;font-size:18px;}
+.setting-group{background:var(--card2);border-radius:var(--radius);padding:16px;}
+.setting-group label{display:block;font-size:14px;margin-bottom:8px;font-weight:600;}
+.setting-group .slider-row{display:flex;align-items:center;gap:12px;}
+.setting-group input[type=range]{flex:1;accent-color:var(--accent);}
+.setting-group .slider-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-top:4px;}
+.start-btn{background:var(--accent);color:#fff;border:none;padding:14px;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;width:100%;max-width:300px;margin:0 auto;display:block;transition:transform .15s;}
+.start-btn:hover{transform:scale(1.03);}
 
-#side { width:220px; background:#0e0e1a; border-left:1px solid #222; padding:14px; flex-shrink:0; }
-#side h2 { color:#88ee88; font-size:18px; margin-bottom:10px; }
-#side .row { display:flex; justify-content:space-between; margin:6px 0; font-size:14px; }
-#side .row .label { color:#888; }
-#side .row .val { color:#fff; font-weight:700; }
-#side .tip { color:#666; font-size:12px; margin-top:14px; line-height:1.5; }
-#side .tip b { color:#88ee88; }
+/* ===== GAME PAGE ===== */
+.game-page{align-items:center;justify-content:center;position:relative;}
+.game-page canvas{border:2px solid var(--card2);border-radius:8px;background:#0a0a1a;}
+.game-page .score-bar{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;gap:20px;font-size:14px;font-weight:600;}
+.game-page .score-bar span{background:var(--card);padding:4px 12px;border-radius:20px;}
+.game-back{position:absolute;top:10px;left:10px;cursor:pointer;font-size:22px;z-index:10;}
 
-/* ── Touch controls overlay ── */
-#touchControls { display:none; position:fixed; bottom:0; left:0; right:0; height:180px; z-index:40; pointer-events:none; }
-#touchControls.active { display:block; }
+/* ===== MODAL / OVERLAY ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--card);border-radius:var(--radius);padding:20px;width:90%;max-width:400px;max-height:80vh;overflow-y:auto;position:relative;}
+.modal .modal-close{position:absolute;top:10px;right:14px;cursor:pointer;font-size:20px;}
+.modal h3{margin-bottom:12px;font-size:16px;}
 
-#joystick { position:absolute; bottom:20px; left:20px; width:120px; height:120px; pointer-events:auto; }
-#joystickBase { width:120px; height:120px; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.15); border-radius:50%; position:relative; }
-#joystickKnob { width:50px; height:50px; background:rgba(255,255,255,.25); border:2px solid rgba(255,255,255,.35); border-radius:50%; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); transition:none; }
+/* ===== BANK ===== */
+.bank-content .exchange-item{background:var(--card2);border-radius:var(--radius);padding:14px;margin-bottom:10px;}
+.bank-content .exchange-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-weight:600;}
+.bank-content .exchange-header .rate{color:var(--text2);font-size:12px;}
+.bank-content .exchange-controls{display:flex;flex-direction:column;gap:8px;}
+.bank-content .exchange-controls input[type=number]{background:#1a1a2e;border:1px solid #444;color:var(--text);padding:6px 10px;border-radius:8px;width:100%;font-size:14px;}
+.bank-content .exchange-controls input[type=range]{width:100%;accent-color:var(--gold);}
+.bank-content .exchange-btns{display:flex;gap:8px;}
+.bank-content .exchange-btns button{flex:1;padding:6px;border:none;border-radius:8px;cursor:pointer;font-size:12px;background:#333;color:var(--text);}
+.bank-content .exchange-btns button:hover{background:#444;}
+.exchange-confirm{background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;width:100%;margin-top:8px;font-weight:600;}
 
-/* D-pad (alternative to joystick) */
-#dpadControls { display:none; position:absolute; bottom:20px; left:20px; pointer-events:auto; }
-.dpad-row { display:flex; gap:6px; justify-content:center; }
-.dpad-btn { width:56px; height:56px; background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.15); border-radius:12px; color:#ccc; font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin:2px; }
-.dpad-btn:active { background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.35); }
+/* ===== SHOP ===== */
+.shop-content{display:flex;height:60vh;gap:0;}
+.shop-sidebar{width:80px;background:var(--card2);border-radius:var(--radius) 0 0 var(--radius);overflow-y:auto;}
+.shop-sidebar .cat{padding:10px;text-align:center;cursor:pointer;font-size:12px;border-bottom:1px solid #333;transition:background .2s;}
+.shop-sidebar .cat.active{background:var(--accent);}
+.shop-main{flex:1;background:var(--bg);border-radius:0 var(--radius) var(--radius) 0;padding:12px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start;}
+.shop-item{background:var(--card2);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:transform .15s;}
+.shop-item:hover{transform:scale(1.05);}
+.shop-item .item-icon{font-size:28px;margin-bottom:4px;}
+.shop-item .item-name{font-size:12px;font-weight:600;}
+.shop-item .item-price{font-size:11px;color:var(--gold);}
 
-#touchActions { position:absolute; bottom:20px; right:20px; display:flex; gap:8px; pointer-events:auto; }
-#touchActions button { width:72px; height:64px; background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.18); border-radius:12px; color:#ccc; font-size:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
-#touchActions button:active { background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.35); }
-#touchActions button .icon { font-size:22px; }
-#touchActions button .label { font-size:9px; opacity:.7; }
+/* ===== BAG ===== */
+.bag-content{display:flex;height:60vh;gap:0;}
+.bag-sidebar{width:80px;background:var(--card2);border-radius:var(--radius) 0 0 var(--radius);overflow-y:auto;}
+.bag-sidebar .cat{padding:10px;text-align:center;cursor:pointer;font-size:12px;border-bottom:1px solid #333;transition:background .2s;}
+.bag-sidebar .cat.active{background:var(--apple);}
+.bag-main{flex:1;background:var(--bg);border-radius:0 var(--radius) var(--radius) 0;padding:12px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start;}
+.bag-item{background:var(--card2);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:transform .15s;}
+.bag-item:hover{transform:scale(1.05);}
+.bag-item .item-icon{font-size:28px;margin-bottom:4px;}
+.bag-item .item-name{font-size:12px;font-weight:600;}
+.bag-item .item-count{font-size:11px;color:var(--text2);}
 
-/* ── Mobile HUD overlay ── */
-#mobileHud { display:none; position:fixed; top:0; left:0; right:0; z-index:30; background:rgba(10,10,20,.85); backdrop-filter:blur(4px); padding:6px 12px 7px; font-size:13px; pointer-events:none; }
-#mobileHud .hud-row { display:flex; align-items:center; gap:10px; }
-#mobileHud .hud-label { color:#888; }
-#mobileHud .hud-val { color:#fff; font-weight:700; }
-#mobileHud .hud-val.score { color:#88ee88; }
-#mobileHud .hud-val.hi { color:#ffcc44; }
-#mobileHud .hud-spacer { flex:1; }
+/* Confirm dialog */
+.confirm-dialog{text-align:center;}
+.confirm-dialog .confirm-text{margin:16px 0;font-size:15px;}
+.confirm-dialog .confirm-btns{display:flex;gap:10px;justify-content:center;}
+.confirm-dialog .confirm-btns button{padding:8px 24px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;}
+.confirm-dialog .btn-yes{background:var(--accent);color:#fff;}
+.confirm-dialog .btn-no{background:#444;color:var(--text);}
 
-/* ── Game overlay (gameover / victory) ── */
-#overlay { position:fixed; inset:0; z-index:80; display:none; align-items:center; justify-content:center; background:rgba(5,5,12,.85); backdrop-filter:blur(4px); }
-#overlay.active { display:flex; }
-#overlayBox { background:#0e0e1a; border:2px solid #44cc44; border-radius:14px; padding:24px 32px; max-width:400px; width:90%; text-align:center; box-shadow:0 8px 40px rgba(68,204,68,.25); }
-#overlayBox.gameover { border-color:#ff6644; box-shadow:0 8px 40px rgba(255,102,68,.25); }
-#overlayBox.victory { border-color:#ffcc44; box-shadow:0 8px 40px rgba(255,204,68,.35); }
-#overlayBox h1 { font-size:1.8rem; color:#88ee88; margin-bottom:6px; }
-#overlayBox.gameover h1 { color:#ff8866; }
-#overlayBox.victory h1 { color:#ffcc44; }
-#overlayBox .subtitle { color:#aaa; font-size:.95rem; margin-bottom:14px; }
-#overlayBox .scoreBig { font-size:2.2rem; font-weight:800; color:#fff; margin:8px 0; }
-#overlayBox .gold-earned { font-size:1.1rem; color:#ffcc44; margin:6px 0; }
-#overlayBox .hiscore { color:#ffcc44; font-size:.95rem; margin-bottom:14px; }
-#overlayBox .prompt { color:#ddd; font-size:.9rem; padding:10px; background:#1a1a2a; border-radius:8px; border:1px solid #2a2a40; }
-#overlayBox .prompt kbd { background:#2a2a40; border:1px solid #444; border-radius:4px; padding:2px 6px; font-size:.85rem; color:#fff; margin:0 2px; }
-.overlay-btns { display:flex; gap:8px; margin-top:14px; }
-.overlay-btns button { flex:1; padding:12px; border-radius:10px; font-size:.95rem; font-weight:600; }
-.btn-primary { background:linear-gradient(135deg,#44cc44,#33aa33); color:#fff; }
-.btn-secondary { background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.15); color:#ccc; }
+/* Item detail */
+.item-detail{text-align:center;}
+.item-detail .detail-icon{font-size:48px;margin:10px 0;}
+.item-detail .detail-name{font-size:18px;font-weight:700;margin-bottom:6px;}
+.item-detail .detail-desc{font-size:13px;color:var(--text2);margin-bottom:12px;}
+.item-detail .detail-stats{font-size:13px;color:var(--gold);}
 
-/* ── Back button on sub-screens ── */
-.back-link { display:inline-block; margin-top:14px; color:#6688aa; font-size:.9rem; cursor:pointer; padding:6px 12px; border-radius:8px; background:rgba(255,255,255,.04); }
-.back-link:hover { color:#aaccff; background:rgba(255,255,255,.08); }
-
-/* ── Mobile layout ── */
-@media (max-width:700px) {
-  #side { display:none !important; }
-  body.touch-active #mobileHud { display:block; }
-  body.touch-active #wrap { flex-direction:column; }
-  body.touch-active #canvasWrap { padding-top:46px; padding-bottom:160px; }
-  #canvasWrap { flex:1; width:100%; }
-  #wrap { flex-direction:column; }
-}
-@media (max-width:400px) {
-  #joystick { bottom:10px; left:10px; width:100px; height:100px; }
-  #joystickBase { width:100px; height:100px; }
-  #joystickKnob { width:42px; height:42px; }
-  #touchActions { bottom:10px; right:10px; gap:6px; }
-  #touchActions button { width:60px; height:54px; }
-  #touchActions button .icon { font-size:20px; }
-  .bp-grid, .shop-grid { grid-template-columns:repeat(2,1fr); }
-}
-
-/* ── Floating Ice button ── */
-#iceBtn{position:fixed;z-index:999;width:44px;height:44px;border-radius:50%;background:rgba(170,220,255,.18);border:1.5px solid rgba(170,220,255,.35);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;transition:background .15s;}
-#iceBtn:active{background:rgba(170,220,255,.35);}
+/* ===== AVATAR PICKER ===== */
+.avatar-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;}
+.avatar-option{width:50px;height:50px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;border:2px solid transparent;transition:border .2s;}
+.avatar-option:hover,.avatar-option.selected{border-color:var(--accent);}
 </style>
 </head>
 <body>
-<div id="iceBtn">❄️</div>
 
-<!-- Mobile HUD -->
-<div id="mobileHud">
-  <div class="hud-row">
-    <span class="hud-label">Score</span>
-    <span class="hud-val score" id="hudScore">0</span>
-    <span class="hud-spacer"></span>
-    <button onclick="toggleFullscreen()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:#ccc;font-size:16px;padding:2px 8px;pointer-events:auto">⛶</button>
-    <span class="hud-label">Best</span>
-    <span class="hud-val hi" id="hudHi">0</span>
+<!-- ===== HOME PAGE ===== -->
+<div id="page-home" class="page active">
+  <div class="top-bar" onclick="showPage('profile')">
+    <div class="profile-bubble">
+      <div class="avatar" id="home-avatar">🐍</div>
+      <div class="profile-info">
+        <div class="name-row">
+          <span class="nickname" id="home-nickname">未命名</span>
+          <span class="level-badge" id="home-level">Lv.1</span>
+        </div>
+        <div class="level-bar-wrap"><div class="level-bar" id="home-level-bar"></div></div>
+      </div>
+    </div>
   </div>
-</div>
-
-<a id="back" href="../index.html">← Menu</a>
-
-<!-- Game area (canvas + side panel) -->
-<div id="gameArea">
-  <div id="wrap">
-    <div id="canvasWrap"><canvas id="game"></canvas></div>
-    <div id="side">
-      <h2>🐍 Snake</h2>
-      <div class="row"><span class="label">Score</span><span class="val" id="sScore">0</span></div>
-      <div class="row"><span class="label">Best</span><span class="val" id="sHi" style="color:#ffcc44">0</span></div>
-      <div class="row"><span class="label">Length</span><span class="val" id="sLen">3</span></div>
-      <div class="row"><span class="label">Gold</span><span class="val" id="sGold" style="color:#ffcc44">0</span></div>
-      <div class="row"><span class="label">Skin</span><span class="val" id="sSkin">🐍</span></div>
-      <div class="tip">
-        <b>Arrow keys</b> or <b>WASD</b> to steer.<br>
-        <b>Enter</b> to start · <b>R</b> to retry.<br>
-        <b>P / Esc</b> to pause.<br>
-        Snake wraps around walls — don't bite yourself!
+  <div class="home-content">
+    <!-- 左1/4 -->
+    <div class="col col-left">
+      <div style="color:#555;font-size:12px;">🔒 敬请期待</div>
+    </div>
+    <!-- 左中1/4 皮肤 -->
+    <div class="col col-lc">
+      <div class="skin-display">
+        <div class="skin-preview" id="skin-preview">🐍</div>
+        <div class="skin-label">当前皮肤</div>
+        <div style="font-size:12px;color:var(--text2);" id="skin-name">经典蛇</div>
+      </div>
+    </div>
+    <!-- 右中1/4 模式 -->
+    <div class="col col-rc">
+      <div class="mode-card" onclick="showPage('settings')">
+        <div class="mode-icon">🎮</div>
+        <div class="mode-name">经典模式</div>
+        <div class="mode-desc">经典贪吃蛇</div>
+      </div>
+      <div class="mode-card" style="opacity:.5;cursor:default;">
+        <div class="mode-icon">🔮</div>
+        <div class="mode-name">更多模式</div>
+        <div class="mode-desc">即将开放</div>
+      </div>
+    </div>
+    <!-- 右1/4 活动 -->
+    <div class="col col-right">
+      <div class="top-row">
+        <div class="mini-card"><span class="icon">🎊</span>活动</div>
+        <div class="mini-card"><span class="icon">🎁</span>福利</div>
+      </div>
+      <div class="hot-events">
+        <h3>🔥 热门活动</h3>
+        <div class="event-item">🎉 新游戏上线！贪吃蛇来啦</div>
+        <div class="event-item">💰 每日登录领金币</div>
+        <div class="event-item">🐍 吃到10个苹果有惊喜</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Touch controls -->
-<div id="touchControls">
-  <div id="joystick">
-    <div id="joystickBase">
-      <div id="joystickKnob"></div>
+<!-- ===== PROFILE PAGE ===== -->
+<div id="page-profile" class="page">
+  <div class="back-btn" onclick="showPage('home')">←</div>
+  <div class="profile-page">
+    <div class="big-avatar" id="profile-avatar" onclick="openAvatarPicker()">🐍</div>
+    <div class="name-section">
+      <div class="name-line">
+        <span class="nickname" id="profile-nickname">未命名</span>
+        <span class="edit-btn" onclick="editNickname()">📝</span>
+      </div>
+      <div class="snake-id" id="profile-snake-id">贪吃号：--------</div>
+      <div class="bio" id="profile-bio">点击设置简介</div>
+    </div>
+    <div class="level-section">
+      <div class="level-info"><span id="profile-level">Lv.1</span><span id="profile-exp">30/100</span></div>
+      <div class="level-bar-wrap"><div class="level-bar" id="profile-level-bar"></div></div>
     </div>
   </div>
-  <div id="dpadControls">
-    <div class="dpad-row"><button class="dpad-btn" ontouchstart="event.preventDefault();changeDir(0,-1)">▲</button></div>
-    <div class="dpad-row"><button class="dpad-btn" ontouchstart="event.preventDefault();changeDir(-1,0)">◀</button><button class="dpad-btn" ontouchstart="event.preventDefault();changeDir(0,1)">▼</button><button class="dpad-btn" ontouchstart="event.preventDefault();changeDir(1,0)">▶</button></div>
-  </div>
-  <div id="touchActions">
-    <button id="btnRetry" ontouchstart="event.preventDefault();retry()"><span class="icon">🔄</span><span class="label">Retry</span></button>
-    <button id="btnPause" ontouchstart="event.preventDefault();togglePause()"><span class="icon">⏸️</span><span class="label">Pause</span></button>
-    <button id="btnMenu" ontouchstart="event.preventDefault();showMainMenu()"><span class="icon">🏠</span><span class="label">Menu</span></button>
-  </div>
 </div>
 
-<!-- Game over / Victory overlay -->
-<div id="overlay">
-  <div id="overlayBox">
-    <h1 id="oTitle">🐍 Snake</h1>
-    <p class="subtitle" id="oSub"></p>
-    <div id="oBody"></div>
-    <div class="prompt" id="oPrompt"></div>
-    <div class="overlay-btns" id="oBtns"></div>
-  </div>
-</div>
-
-<!-- ═══════ SCREENS ═══════ -->
-
-<!-- Main Menu -->
-<div class="screen active" id="menuScreen">
-  <div class="screen-box">
-    <h1 style="color:#88ee88;">🐍 Snake</h1>
-    <div class="stat-bar" id="menuStats"></div>
-    <button class="menu-btn" onclick="showSettings()"><span class="btn-icon">🎮</span>开始游戏</button>
-    <button class="menu-btn" onclick="showControlSettings()"><span class="btn-icon">⚙️</span>设置</button>
-    <button class="menu-btn" onclick="showBank()"><span class="btn-icon">🏦</span>银  行</button>
-    <button class="menu-btn" onclick="showShop()"><span class="btn-icon">🛒</span>商  店</button>
-    <button class="menu-btn" onclick="showBackpack()"><span class="btn-icon">🎒</span>背  包</button>
-    <a class="menu-btn" href="../index.html" style="text-align:center;"><span class="btn-icon">⬅️</span>返回主菜单</a>
-  </div>
-</div>
-
-<!-- Settings -->
-<div class="screen" id="settingsScreen">
-  <div class="screen-box">
-    <h1 style="color:#88ee88;">🐍 蛇蛇设定 🐍</h1>
+<!-- ===== SETTINGS PAGE (调试) ===== -->
+<div id="page-settings" class="page">
+  <div class="back-btn" onclick="showPage('home')">←</div>
+  <div class="settings-page">
+    <h2>🎮 经典模式设置</h2>
     <div class="setting-group">
-      <div class="label">棋盘大小</div>
-      <div class="option-row" id="sizeOptions"></div>
+      <label>📏 棋盘大小</label>
+      <div class="slider-row">
+        <span style="font-size:12px;">小</span>
+        <input type="range" id="board-size" min="1" max="3" value="2">
+        <span style="font-size:12px;">大</span>
+      </div>
+      <div class="slider-labels"><span>15×15</span><span>20×20</span><span>25×25</span></div>
     </div>
     <div class="setting-group">
-      <div class="label">速度</div>
-      <div class="option-row" id="speedOptions"></div>
+      <label>⚡ 速度</label>
+      <div class="slider-row">
+        <span style="font-size:12px;">慢</span>
+        <input type="range" id="game-speed" min="1" max="3" value="2">
+        <span style="font-size:12px;">快</span>
+      </div>
+      <div class="slider-labels"><span>慢速</span><span>中速</span><span>快速</span></div>
     </div>
-    <button class="start-btn" onclick="startGame()">开 始 游 戏</button>
-    <div class="back-link" onclick="showMainMenu()">← 返回菜单</div>
+    <button class="start-btn" onclick="startGame()">🐍 开始游戏！</button>
   </div>
 </div>
 
-<!-- Control Settings -->
-<div class="screen" id="controlScreen">
-  <div class="screen-box">
-    <h1 style="color:#88ee88;">⚙️ 设置</h1>
-    <div class="setting-group">
-      <div class="label">触屏控制方式</div>
-      <div class="option-row" id="controlOptions"></div>
+<!-- ===== GAME PAGE ===== -->
+<div id="page-game" class="page">
+  <div class="game-back" onclick="endGame()">←</div>
+  <div class="score-bar">
+    <span>💰 <span id="game-score">0</span></span>
+    <span>🍎 <span id="game-apples">0</span></span>
+    <span>📏 <span id="game-length">3</span></span>
+  </div>
+  <canvas id="game-canvas"></canvas>
+</div>
+
+<!-- ===== BOTTOM BAR ===== -->
+<div class="bottom-bar" id="bottom-bar">
+  <div class="tab" onclick="openModal('bank')"><span class="icon">🏦</span>银行</div>
+  <div class="tab" onclick="openModal('shop')"><span class="icon">🏪</span>商店</div>
+  <div class="tab" onclick="openModal('bag')"><span class="icon">🎒</span>背包</div>
+</div>
+
+<!-- ===== MODALS ===== -->
+<div class="modal-overlay" id="modal-bank">
+  <div class="modal">
+    <span class="modal-close" onclick="closeModal('bank')">✕</span>
+    <h3>🏦 银行</h3>
+    <div class="bank-content">
+      <div style="margin-bottom:10px;font-size:13px;">💰 金币：<span id="bank-gold">0</span> | 🍎 苹果：<span id="bank-apples">0</span></div>
+      <div class="exchange-item">
+        <div class="exchange-header">💰 → 🍎 <span class="rate">（5💰 = 1🍎）</span></div>
+        <div class="exchange-controls">
+          <input type="number" id="exchange-input" min="0" max="0" value="0" placeholder="输入数量" oninput="syncSliderFromInput()">
+          <input type="range" id="exchange-slider" min="0" max="0" value="0" oninput="syncInputFromSlider()">
+          <div class="exchange-btns">
+            <button onclick="setExchangeMin()">最小</button>
+            <button onclick="setExchangeMax()">最大</button>
+          </div>
+          <button class="exchange-confirm" onclick="doExchange()">确认兑换</button>
+        </div>
+      </div>
     </div>
-    <div style="color:#888;font-size:.8rem;margin:12px 0;line-height:1.4">
-      🕹️ <b>摇杆</b>：左下角圆形摇杆，拖动控制方向<br>
-      ⬆️ <b>方向键</b>：上下左右四个按钮
-    </div>
-    <div class="back-link" onclick="showMainMenu()">← 返回菜单</div>
   </div>
 </div>
 
-<!-- Bank -->
-<div class="screen" id="bankScreen">
-  <div class="screen-box">
-    <h1 style="color:#ffcc44;">🏦 银行</h1>
-    <div class="stat-bar" id="bankStats"></div>
-    <div class="bank-info">10 金币 = 1 苹果 🍎</div>
-    <div class="bank-row">
-      <span style="color:#ffcc44;">💰</span>
-      <input type="number" class="bank-input" id="bankInput" value="10" min="10" step="10">
-      <span style="color:#888;">金币 →</span>
-      <button class="bank-convert-btn" onclick="convertGold()">兑 换</button>
+<div class="modal-overlay" id="modal-shop">
+  <div class="modal">
+    <span class="modal-close" onclick="closeModal('shop')">✕</span>
+    <h3>🏪 商店</h3>
+    <div class="shop-content">
+      <div class="shop-sidebar" id="shop-cats"></div>
+      <div class="shop-main" id="shop-items"></div>
     </div>
-    <div id="bankResult" style="color:#aaa;font-size:.85rem;margin-top:8px;"></div>
-    <div class="back-link" onclick="showMainMenu()">← 返回菜单</div>
   </div>
 </div>
 
-<!-- Shop -->
-<div class="screen" id="shopScreen">
-  <div class="screen-box">
-    <h1 style="color:#ff8866;">🛒 商店</h1>
-    <div class="shop-tabs">
-      <div class="shop-tab active" id="tabSkins" onclick="switchShopTab('skins')">🐍 皮肤</div>
-      <div class="shop-tab" id="tabBoards" onclick="switchShopTab('boards')">🎲 棋盘</div>
+<div class="modal-overlay" id="modal-bag">
+  <div class="modal">
+    <span class="modal-close" onclick="closeModal('bag')">✕</span>
+    <h3>🎒 背包</h3>
+    <div class="bag-content">
+      <div class="bag-sidebar" id="bag-cats"></div>
+      <div class="bag-main" id="bag-items"></div>
     </div>
-    <div class="stat-bar" id="shopStats"></div>
-    <div class="bp-grid" id="shopGrid"></div>
-    <div class="back-link" onclick="showMainMenu()">← 返回菜单</div>
   </div>
 </div>
 
-<!-- Backpack -->
-<div class="screen" id="backpackScreen">
-  <div class="screen-box">
-    <h1 style="color:#88aaff;">🎒 背包</h1>
-    <div class="stat-bar" id="bpStats"></div>
-    <div class="bp-grid" id="bpGrid"></div>
-    <div class="back-link" onclick="showMainMenu()">← 返回菜单</div>
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal confirm-dialog">
+    <span class="modal-close" onclick="closeModal('confirm')">✕</span>
+    <h3>确认兑换</h3>
+    <div class="confirm-text" id="confirm-text"></div>
+    <div class="confirm-btns">
+      <button class="btn-yes" id="confirm-yes">确认</button>
+      <button class="btn-no" onclick="closeModal('confirm')">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal item-detail">
+    <span class="modal-close" onclick="closeModal('detail')">✕</span>
+    <div class="detail-icon" id="detail-icon"></div>
+    <div class="detail-name" id="detail-name"></div>
+    <div class="detail-desc" id="detail-desc"></div>
+    <div class="detail-stats" id="detail-stats"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-avatar">
+  <div class="modal">
+    <span class="modal-close" onclick="closeModal('avatar')">✕</span>
+    <h3>选择头像</h3>
+    <div class="avatar-picker" id="avatar-picker"></div>
   </div>
 </div>
 
 <script>
-'use strict';
-// ═══════════════════════════════════════════
-// 🐍 Snake — Thawpaw Games v2
-// Economy + Skins + Settings
-// ═══════════════════════════════════════════
+// ===== DATA =====
+const AVATARS = ['🐍','🐱','🐶','🐸','🦊','🐼','🐰','🦁','🐯','🐻','🐨','🐵','🦄','🐲','🦋','🐢'];
+const SHOP_DATA = {
+  '皮肤': [
+    {id:'skin_classic',name:'经典蛇',icon:'🐍',price:0,currency:'gold',desc:'默认绿色蛇'},
+    {id:'skin_fire',name:'火焰蛇',icon:'🔥',price:50,currency:'gold',desc:'燃烧的红色蛇'},
+    {id:'skin_ice',name:'冰霜蛇',icon:'❄️',price:50,currency:'gold',desc:'冰蓝色的蛇'},
+    {id:'skin_rainbow',name:'彩虹蛇',icon:'🌈',price:3,currency:'apple',desc:'七彩斑斓的蛇'},
+  ],
+  '加速': [
+    {id:'speed_boost',name:'加速药水',icon:'⚡',price:10,currency:'gold',desc:'游戏内临时加速',count:0},
+  ],
+  '道具': [
+    {id:'shield',name:'护盾',icon:'🛡️',price:20,currency:'gold',desc:'抵挡一次碰撞',count:0},
+    {id:'magnet',name:'磁铁',icon:'🧲',price:2,currency:'apple',desc:'自动吸附附近食物',count:0},
+  ],
+};
+const CURRENCY_NAMES = {gold:'💰',apple:'🍎'};
+const BAG_CATEGORIES = ['全部','皮肤','道具'];
 
-// ─── Skin definitions ───
-const SKINS = [
-  { id:'green',  name:'青蛇',  emoji:'🐍', body:'#44cc44', head:'#88ff88', pattern:'solid',    owned:true },
-  { id:'fire',   name:'火蛇',  emoji:'🔥', body:'#ff6644', head:'#ffaa44', pattern:'stripes',  priceApples:5 },
-  { id:'water',  name:'水蛇',  emoji:'💧', body:'#4488ff', head:'#88ccff', pattern:'solid',    priceApples:5 },
-  { id:'gold',   name:'金蛇',  emoji:'✨', body:'#ffcc44', head:'#ffee88', pattern:'gradient', priceApples:10 },
-  { id:'shadow', name:'影蛇',  emoji:'👻', body:'#666688', head:'#aaaadd', pattern:'solid',    priceApples:8 },
-  { id:'rainbow',name:'彩虹蛇',emoji:'🌈', body:'rainbow', head:'#ff88ff', pattern:'rainbow',  priceApples:20 },
-];
-
-// ─── Board themes ───
-const BOARDS = [
-  { id:'default', name:'默认',    emoji:'⬛', bg:'#0a0a14', grid:'rgba(255,255,255,.04)', priceApples:0 },
-  { id:'fire',    name:'火焰',    emoji:'🔥', bg:'#1a0a0a', grid:'rgba(255,80,20,.08)',  priceApples:10 },
-  { id:'wave',    name:'海浪',    emoji:'🌊', bg:'#0a0a1a', grid:'rgba(68,136,255,.08)', priceApples:10 },
-  { id:'stars',   name:'星空',    emoji:'✨', bg:'#05050f', grid:'rgba(200,200,255,.06)', priceApples:15 },
-  { id:'cloud',   name:'白云',    emoji:'☁️', bg:'#0e0e18', grid:'rgba(220,220,240,.07)', priceApples:20 },
-  { id:'rainbow', name:'彩虹',    emoji:'🌈', bg:'#0a0a14', grid:'rgba(255,100,200,.06)', priceApples:30 },
-];
-
-// ─── Gold-per-score ratios ───
-const GOLD_RATIOS = {
-  '15-slow':1, '15-medium':1, '15-fast':2,
-  '20-slow':2, '20-medium':1.5, '20-fast':3,
-  '25-slow':2, '25-medium':3, '25-fast':5,
+let player = {
+  nickname: '',
+  avatar: '🐍',
+  snakeId: '',
+  bio: '',
+  level: 1,
+  exp: 0,
+  gold: 100,
+  apples: 5,
+  skin: 'skin_classic',
+  inventory: {},
 };
 
-const SPEED_MS = { slow:300, medium:220, fast:150 };
-
-const SIZE_OPTIONS = [
-  { id:15, label:'小', sub:'15×15' },
-  { id:20, label:'中', sub:'20×20' },
-  { id:25, label:'大', sub:'25×25' },
-];
-const SPEED_OPTIONS = [
-  { id:'slow',   label:'慢', sub:'🐢' },
-  { id:'medium', label:'中', sub:'🐇' },
-  { id:'fast',   label:'快', sub:'⚡' },
-];
-
-// ─── Persistent state ───
-const STATE_KEY = 'thawpaw.snake.state.v2';
-let pState = loadState();
-
-function defaultState() {
-  return { gold:0, apples:0, ownedSkins:['green'], equippedSkin:'green', ownedBoards:['default'], equippedBoard:'default', hiScore:0, settings:{ size:20, speed:'medium', control:'joystick' } };
+function loadPlayer(){
+  try{
+    const s = localStorage.getItem('snake_player');
+    if(s) player = {...player,...JSON.parse(s)};
+  }catch(e){}
+  if(!player.snakeId){
+    player.snakeId = String(Math.floor(10000000+Math.random()*90000000));
+  }
+  savePlayer();
 }
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STATE_KEY);
-    if (!raw) return defaultState();
-    const s = JSON.parse(raw);
-    // Ensure all fields exist
-    const d = defaultState();
-    s.gold = s.gold || 0;
-    s.apples = s.apples || 0;
-    s.ownedSkins = s.ownedSkins || ['green'];
-    s.equippedSkin = s.equippedSkin || 'green';
-    s.hiScore = s.hiScore || 0;
-    s.settings = Object.assign({}, d.settings, s.settings || {});
-    return s;
-  } catch(e) { return defaultState(); }
-}
-function saveState() {
-  localStorage.setItem(STATE_KEY, JSON.stringify(pState));
+function savePlayer(){
+  localStorage.setItem('snake_player',JSON.stringify(player));
 }
 
-// ─── DOM refs ───
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-const sScore = document.getElementById('sScore');
-const sHi = document.getElementById('sHi');
-const sLen = document.getElementById('sLen');
-const sGold = document.getElementById('sGold');
-const sSkin = document.getElementById('sSkin');
-const hudScore = document.getElementById('hudScore');
-const hudHi = document.getElementById('hudHi');
-const overlay = document.getElementById('overlay');
-const overlayBox = document.getElementById('overlayBox');
-const oTitle = document.getElementById('oTitle');
-const oSub = document.getElementById('oSub');
-const oBody = document.getElementById('oBody');
-const oPrompt = document.getElementById('oPrompt');
-const oBtns = document.getElementById('oBtns');
-
-// ─── Game state ───
-let GRID = 20;
-let snake, dir, nextDir, food, score, alive, tickInterval, tickMs, lastTick;
-let paused = false;
-let growQueue = 0;
-let gameState = 'menu'; // menu | settings | playing | over | victory
-let touchActive = false;
-let selectedSize = pState.settings.size;
-let selectedSpeed = pState.settings.speed;
-
-// ─── Audio (Web Audio API) ───
-let audioCtx = null;
-function initAudio() {
-  if (audioCtx) return;
-  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { audioCtx = null; }
-}
-function blip(freq, dur=0.08, type='sine', vol=0.08) {
-  if (!audioCtx) return;
-  const t0 = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, t0);
-  osc.frequency.exponentialRampToValueAtTime(Math.max(40, freq*0.7), t0+dur);
-  gain.gain.setValueAtTime(0.0001, t0);
-  gain.gain.exponentialRampToValueAtTime(vol, t0+0.005);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start(t0); osc.stop(t0+dur+0.02);
-}
-function sfxEat() { blip(880,0.07,'square',0.07); setTimeout(()=>blip(1320,0.08,'square',0.06),50); }
-function sfxGameOver() {
-  blip(220,0.18,'sawtooth',0.10);
-  setTimeout(()=>blip(160,0.22,'sawtooth',0.10),140);
-  setTimeout(()=>blip(110,0.32,'sawtooth',0.10),320);
-}
-function sfxVictory() {
-  [523,659,784,1047].forEach((f,i) => setTimeout(()=>blip(f,0.15,'square',0.08), i*120));
-}
-function sfxMove() { blip(420,0.025,'sine',0.015); }
-
-// ═══════════════════════════════════════════
-// SCREEN MANAGEMENT
-// ═══════════════════════════════════════════
-
-function hideAllScreens() {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('gameArea').classList.remove('active');
-  overlay.classList.remove('active');
+// ===== PAGES =====
+let currentPage = 'home';
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  currentPage = name;
+  const bb = document.getElementById('bottom-bar');
+  bb.style.display = (name==='home') ? 'flex' : 'none';
+  if(name==='home') refreshHome();
+  if(name==='profile') refreshProfile();
 }
 
-function showScreen(id) {
-  hideAllScreens();
-  document.getElementById(id).classList.add('active');
-  document.getElementById('back').style.display = '';
+function refreshHome(){
+  document.getElementById('home-avatar').textContent = player.avatar;
+  document.getElementById('home-nickname').textContent = player.nickname || '未命名';
+  document.getElementById('home-level').textContent = 'Lv.'+player.level;
+  document.getElementById('home-level-bar').style.width = (player.exp%100)+'%';
 }
 
-function showMainMenu() {
-  gameState = 'menu';
-  alive = false;
-  hideAllScreens();
-  document.getElementById('overlay').classList.remove('active');
-  document.getElementById('menuScreen').classList.add('active');
-  updateMenuStats();
-  document.getElementById('back').style.display = 'none';
+function refreshProfile(){
+  document.getElementById('profile-avatar').textContent = player.avatar;
+  document.getElementById('profile-nickname').textContent = player.nickname || '未命名';
+  document.getElementById('profile-snake-id').textContent = '贪吃号：'+player.snakeId;
+  document.getElementById('profile-bio').textContent = player.bio || '点击设置简介';
+  document.getElementById('profile-level').textContent = 'Lv.'+player.level;
+  document.getElementById('profile-exp').textContent = (player.exp%100)+'/100';
+  document.getElementById('profile-level-bar').style.width = (player.exp%100)+'%';
 }
 
-function updateMenuStats() {
-  const skin = SKINS.find(s => s.id === pState.equippedSkin) || SKINS[0];
-  document.getElementById('menuStats').innerHTML = `
-    <div class="stat"><span class="icon">🏆</span><span class="val hi-val">${pState.hiScore}</span></div>
-    <div class="stat"><span class="icon">💰</span><span class="val gold-val">${pState.gold}</span></div>
-    <div class="stat"><span class="icon">🍎</span><span class="val apple-val">${pState.apples}</span></div>
-    <div class="stat"><span class="icon">${skin.emoji}</span><span class="val">${skin.name}</span></div>
-  `;
+// ===== NICKNAME =====
+function editNickname(){
+  const name = prompt('输入昵称：', player.nickname);
+  if(name !== null && name.trim()){
+    player.nickname = name.trim();
+    savePlayer();
+    refreshProfile();
+    refreshHome();
+  }
 }
 
-// ─── Settings screen ───
-function showSettings() {
-  gameState = 'settings';
-  showScreen('settingsScreen');
-  buildSettingsUI();
+// ===== BIO =====
+document.getElementById('profile-bio').addEventListener('click', function(){
+  const b = prompt('输入简介：', player.bio||'');
+  if(b !== null){
+    player.bio = b;
+    savePlayer();
+    refreshProfile();
+  }
+});
+
+// ===== AVATAR =====
+function openAvatarPicker(){
+  const picker = document.getElementById('avatar-picker');
+  picker.innerHTML = '';
+  AVATARS.forEach(a=>{
+    const d = document.createElement('div');
+    d.className = 'avatar-option'+(player.avatar===a?' selected':'');
+    d.textContent = a;
+    d.onclick = ()=>{
+      player.avatar = a;
+      savePlayer();
+      refreshProfile();
+      refreshHome();
+      closeModal('avatar');
+    };
+    picker.appendChild(d);
+  });
+  openModal('avatar');
 }
 
-function buildSettingsUI() {
-  // Size options
-  const sizeEl = document.getElementById('sizeOptions');
-  sizeEl.innerHTML = SIZE_OPTIONS.map(o =>
-    `<div class="option-card${o.id===selectedSize?' selected':''}" onclick="selectSize(${o.id})">
-      <div class="opt-title">${o.label}</div><div class="opt-sub">${o.sub}</div>
-    </div>`
-  ).join('');
-  // Speed options
-  const speedEl = document.getElementById('speedOptions');
-  speedEl.innerHTML = SPEED_OPTIONS.map(o =>
-    `<div class="option-card${o.id===selectedSpeed?' selected':''}" onclick="selectSpeed('${o.id}')">
-      <div class="opt-title">${o.label}</div><div class="opt-sub">${o.sub}</div>
-    </div>`
-  ).join('');
+// ===== MODALS =====
+function openModal(name){
+  document.getElementById('modal-'+name).classList.add('active');
+  if(name==='bank') refreshBank();
+  if(name==='shop') refreshShop();
+  if(name==='bag') refreshBag();
+}
+function closeModal(name){
+  document.getElementById('modal-'+name).classList.remove('active');
 }
 
-function selectSize(s) { selectedSize = s; buildSettingsUI(); }
-function selectSpeed(s) { selectedSpeed = s; buildSettingsUI(); }
-
-// ─── Control settings screen ───
-var CONTROL_OPTIONS = [
-  { id:'joystick', label:'🕹️ 摇杆', sub:'拖动控制' },
-  { id:'dpad', label:'⬆️ 方向键', sub:'上下左右按钮' },
-];
-
-function showControlSettings() {
-  showScreen('controlScreen');
-  buildControlUI();
+// ===== BANK =====
+function refreshBank(){
+  document.getElementById('bank-gold').textContent = player.gold;
+  document.getElementById('bank-apples').textContent = player.apples;
+  const maxExchange = Math.floor(player.gold / 5);
+  const slider = document.getElementById('exchange-slider');
+  const input = document.getElementById('exchange-input');
+  slider.max = maxExchange;
+  input.max = maxExchange;
+  if(parseInt(slider.value) > maxExchange){slider.value=maxExchange; input.value=maxExchange;}
+}
+function syncSliderFromInput(){
+  const v = parseInt(document.getElementById('exchange-input').value)||0;
+  document.getElementById('exchange-slider').value = v;
+}
+function syncInputFromSlider(){
+  const v = document.getElementById('exchange-slider').value;
+  document.getElementById('exchange-input').value = v;
+}
+function setExchangeMin(){
+  document.getElementById('exchange-slider').value=0;
+  document.getElementById('exchange-input').value=0;
+}
+function setExchangeMax(){
+  const max = Math.floor(player.gold/5);
+  document.getElementById('exchange-slider').value=max;
+  document.getElementById('exchange-input').value=max;
+}
+function doExchange(){
+  const amount = parseInt(document.getElementById('exchange-input').value)||0;
+  if(amount<=0) return;
+  const cost = amount * 5;
+  if(player.gold < cost){alert('金币不足！');return;}
+  player.gold -= cost;
+  player.apples += amount;
+  savePlayer();
+  refreshBank();
+  document.getElementById('exchange-slider').value=0;
+  document.getElementById('exchange-input').value=0;
 }
 
-function buildControlUI() {
-  var el = document.getElementById('controlOptions');
-  var cur = pState.settings.control || 'joystick';
-  el.innerHTML = CONTROL_OPTIONS.map(function(o) {
-    return '<div class="option-card' + (o.id===cur?' selected':'') + '" onclick="selectControl(\'' + o.id + '\')">' +
-      '<div class="opt-title">' + o.label + '</div><div class="opt-sub">' + o.sub + '</div>' +
-    '</div>';
-  }).join('');
+// ===== SHOP =====
+let shopCat = '';
+function refreshShop(){
+  const cats = document.getElementById('shop-cats');
+  cats.innerHTML = '';
+  const catNames = Object.keys(SHOP_DATA);
+  if(!shopCat) shopCat = catNames[0];
+  catNames.forEach(c=>{
+    const d = document.createElement('div');
+    d.className = 'cat'+(shopCat===c?' active':'');
+    d.textContent = c;
+    d.onclick = ()=>{shopCat=c;refreshShop();};
+    cats.appendChild(d);
+  });
+  const items = document.getElementById('shop-items');
+  items.innerHTML = '';
+  (SHOP_DATA[shopCat]||[]).forEach(item=>{
+    const d = document.createElement('div');
+    d.className = 'shop-item';
+    d.innerHTML = `<div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div><div class="item-price">${item.price} ${CURRENCY_NAMES[item.currency]}</div>`;
+    d.onclick = ()=>showConfirm(item);
+    items.appendChild(d);
+  });
+}
+function showConfirm(item){
+  const t = `是否用 ${item.price}${CURRENCY_NAMES[item.currency]} 兑换 ${item.icon} ${item.name}？`;
+  document.getElementById('confirm-text').textContent = t;
+  const yes = document.getElementById('confirm-yes');
+  yes.onclick = ()=>buyItem(item);
+  openModal('confirm');
+}
+function buyItem(item){
+  const cur = item.currency;
+  const has = cur==='gold'?player.gold:player.apples;
+  if(has < item.price){alert('余额不足！');closeModal('confirm');closeModal('shop');return;}
+  if(cur==='gold') player.gold -= item.price;
+  else player.apples -= item.price;
+  if(!player.inventory[item.id]) player.inventory[item.id] = {count:0,...item};
+  player.inventory[item.id].count++;
+  savePlayer();
+  closeModal('confirm');
+  refreshShop();
 }
 
-function selectControl(c) {
-  pState.settings.control = c;
-  saveState();
-  buildControlUI();
-}
-
-// ─── Bank screen ───
-function showBank() {
-  showScreen('bankScreen');
-  updateBankStats();
-  document.getElementById('bankResult').textContent = '';
-  document.getElementById('bankInput').value = 10;
-}
-
-function updateBankStats() {
-  document.getElementById('bankStats').innerHTML = `
-    <div class="stat"><span class="icon">💰</span><span class="val gold-val">${pState.gold} 金币</span></div>
-    <div class="stat"><span class="icon">🍎</span><span class="val apple-val">${pState.apples} 苹果</span></div>
-  `;
-}
-
-function convertGold() {
-  const input = document.getElementById('bankInput');
-  let amount = parseInt(input.value, 10);
-  if (isNaN(amount) || amount < 10) {
-    document.getElementById('bankResult').innerHTML = '<span style="color:#ff6644">最少兑换 10 金币</span>';
+// ===== BAG =====
+let bagCat = '全部';
+function refreshBag(){
+  const cats = document.getElementById('bag-cats');
+  cats.innerHTML = '';
+  BAG_CATEGORIES.forEach(c=>{
+    const d = document.createElement('div');
+    d.className = 'cat'+(bagCat===c?' active':'');
+    d.textContent = c;
+    d.onclick = ()=>{bagCat=c;refreshBag();};
+    cats.appendChild(d);
+  });
+  const items = document.getElementById('bag-items');
+  items.innerHTML = '';
+  const inv = Object.values(player.inventory).filter(i=>i.count>0);
+  if(inv.length===0){
+    items.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#555;padding:20px;">背包空空如也~</div>';
     return;
   }
-  // Round down to nearest 10
-  amount = Math.floor(amount / 10) * 10;
-  if (amount > pState.gold) {
-    amount = Math.floor(pState.gold / 10) * 10;
-    if (amount < 10) {
-      document.getElementById('bankResult').innerHTML = '<span style="color:#ff6644">金币不够！需要至少 10 金币</span>';
-      return;
-    }
-  }
-  const apples = amount / 10;
-  pState.gold -= amount;
-  pState.apples += apples;
-  saveState();
-  updateBankStats();
-  document.getElementById('bankResult').innerHTML = `<span style="color:#88ee88">✅ 兑换了 ${apples} 苹果！</span>`;
-  input.value = 10;
+  inv.forEach(item=>{
+    const d = document.createElement('div');
+    d.className = 'bag-item';
+    d.innerHTML = `<div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div><div class="item-count">×${item.count}</div>`;
+    d.onclick = ()=>showDetail(item);
+    items.appendChild(d);
+  });
+}
+function showDetail(item){
+  document.getElementById('detail-icon').textContent = item.icon;
+  document.getElementById('detail-name').textContent = item.name;
+  document.getElementById('detail-desc').textContent = item.desc||'';
+  document.getElementById('detail-stats').textContent = '数量：×'+item.count;
+  openModal('detail');
 }
 
-// ─── Shop screen (skins) ───
-var shopTab = 'skins';
+// ===== GAME =====
+let canvas, ctx;
+let snake, food, direction, gameLoop, gameActive;
+let gridSize, cellSize, speed;
+const BOARD_SIZES = [15,20,25];
+const SPEEDS = [200,130,80];
 
-function showShop() {
-  showScreen('shopScreen');
-  buildShop();
+function startGame(){
+  const bs = parseInt(document.getElementById('board-size').value)-1;
+  const sp = parseInt(document.getElementById('game-speed').value)-1;
+  gridSize = BOARD_SIZES[bs];
+  speed = SPEEDS[sp];
+  canvas = document.getElementById('game-canvas');
+  ctx = canvas.getContext('2d');
+  const maxPx = Math.min(window.innerWidth-20, window.innerHeight-100);
+  cellSize = Math.floor(maxPx / gridSize);
+  canvas.width = cellSize * gridSize;
+  canvas.height = cellSize * gridSize;
+  snake = [{x:Math.floor(gridSize/2),y:Math.floor(gridSize/2)}];
+  for(let i=1;i<3;i++) snake.push({x:snake[0].x-i,y:snake[0].y});
+  direction = {x:1,y:0};
+  placeFood();
+  gameActive = true;
+  document.getElementById('game-score').textContent='0';
+  document.getElementById('game-apples').textContent='0';
+  document.getElementById('game-length').textContent='3';
+  showPage('game');
+  if(gameLoop) clearInterval(gameLoop);
+  gameLoop = setInterval(gameTick, speed);
 }
 
-function restoreTouchControls() {
-  if (touchActive) {
-    document.getElementById('touchControls').classList.add('active');
-  }
+function placeFood(){
+  do{
+    food = {x:Math.floor(Math.random()*gridSize), y:Math.floor(Math.random()*gridSize)};
+  }while(snake.some(s=>s.x===food.x&&s.y===food.y));
 }
 
-// Global confirm callbacks (set before showing)
-var _pendingConfirm = null;
-var _pendingCancel = null;
-
-function showConfirmOverlay(title, body, onConfirm, confirmText, onCancel) {
-  _pendingConfirm = onConfirm;
-  _pendingCancel = onCancel || null;
-  document.getElementById('oTitle').textContent = title;
-  document.getElementById('oSub').textContent = '';
-  document.getElementById('oBody').innerHTML = body;
-  document.getElementById('oPrompt').innerHTML = '';
-  document.getElementById('oBtns').innerHTML =
-    '<button class="btn-secondary" onclick="_doConfirmCancel()">取消</button>' +
-    '<button class="btn-primary" onclick="_doConfirmOk()">' + (confirmText || '确定') + '</button>';
-  document.getElementById('overlay').classList.add('active');
-}
-
-function _doConfirmOk() {
-  document.getElementById('overlay').classList.remove('active');
-  if (_pendingConfirm) { var fn = _pendingConfirm; _pendingConfirm = null; _pendingCancel = null; fn(); }
-}
-
-function _doConfirmCancel() {
-  document.getElementById('overlay').classList.remove('active');
-  if (_pendingCancel) { var fn = _pendingCancel; _pendingConfirm = null; _pendingCancel = null; fn(); }
-}
-
-function switchShopTab(tab) {
-  console.log('switchShopTab:', tab);
-  shopTab = tab;
-  document.getElementById('tabSkins').className = 'shop-tab' + (tab==='skins' ? ' active' : '');
-  document.getElementById('tabBoards').className = 'shop-tab' + (tab==='boards' ? ' active' : '');
-  buildShop();
-}
-
-function buildShop() {
-  document.getElementById('shopStats').innerHTML =
-    '<div class="stat"><span class="icon">🍎</span><span class="val apple-val">' + pState.apples + ' 苹果</span> &nbsp; <span class="icon">💰</span><span class="val">' + pState.gold + ' 金币</span></div>';
-  var grid = document.getElementById('shopGrid');
-  if (shopTab === 'boards') {
-    grid.innerHTML = BOARDS.map(function(bd) {
-      var owned = pState.ownedBoards.includes(bd.id);
-      var equipped = pState.equippedBoard === bd.id;
-      var cls = owned ? (equipped ? 'bp-card equipped' : 'bp-card owned') : 'bp-card locked';
-      var badge = bd.id === 'default' ? (equipped ? '✅ 使用中' : '免费') : (owned ? (equipped ? '✅ 使用中' : '已拥有') : bd.priceApples + ' 🍎');
-      var onclick = '';
-      if (!owned && bd.id !== 'default') onclick = 'onclick="confirmBuyBoard(\'' + bd.id + '\')"';
-      else if (owned && !equipped) onclick = 'onclick="equipBoard(\'' + bd.id + '\')"';
-      return '<div class="' + cls + '" ' + onclick + '>' +
-        '<div class="bp-emoji">' + bd.emoji + '</div>' +
-        '<div class="bp-name">' + bd.name + '</div>' +
-        '<div class="bp-badge">' + badge + '</div>' +
-        '<div style="width:100%;height:6px;border-radius:3px;margin-top:4px;background:' + bd.bg + ';border:1px solid ' + bd.grid + '"></div>' +
-      '</div>';
-    }).join('');
-  } else {
-    grid.innerHTML = SKINS.map(function(sk) {
-      var owned = pState.ownedSkins.includes(sk.id);
-      var equipped = pState.equippedSkin === sk.id;
-      var cls = owned ? (equipped ? 'bp-card equipped' : 'bp-card owned') : 'bp-card locked';
-      var badge = owned ? (equipped ? '✅ 已装备' : '已拥有') : sk.priceApples + ' 🍎';
-      return '<div class="' + cls + '" ' + (!owned ? 'onclick="confirmBuySkin(\'' + sk.id + '\')"' : (equipped ? '' : 'onclick="equipFromShop(\'' + sk.id + '\')"')) + '>' +
-        '<div class="bp-emoji">' + sk.emoji + '</div>' +
-        '<div class="bp-name">' + sk.name + '</div>' +
-        '<div class="bp-badge">' + badge + '</div>' +
-      '</div>';
-    }).join('');
-  }
-}
-
-function confirmBuySkin(id) {
-  var sk = SKINS.find(function(s){return s.id===id;});
-  if (!sk || pState.ownedSkins.includes(id)) return;
-  var price = sk.priceApples;
-  var body =
-    '<div style="font-size:2rem;margin:8px 0">' + sk.emoji + ' ' + sk.name + '</div>' +
-    '<div style="font-size:1.1rem;color:#ffcc44;margin:8px 0">确定要用 ' + price + ' 苹果购买此皮肤？</div>' +
-    '<div style="color:#aaa;font-size:.85rem">当前苹果：' + pState.apples + '</div>';
-  var cancelFn = function(){ showShop(); };
-  if (pState.apples < price) {
-    showConfirmOverlay('\u{1F6D2} 苹果不够', '<div style="color:#ff8866">你没有足够的苹果！<br>需要 ' + price + '，你有 ' + pState.apples + '。</div>', function(){ showShop(); }, '知道了', cancelFn);
-  } else {
-    showConfirmOverlay('\u{1F6D2} 购买皮肤', body, function(){ buySkin(id); }, '确定', cancelFn);
-  }
-}
-
-function cancelBuySkin() {
-  document.getElementById('overlay').classList.remove('active');
-  showShop();
-}
-
-function buySkin(id) {
-  var sk = SKINS.find(function(s){return s.id===id;});
-  if (!sk) return;
-  if (pState.apples < sk.priceApples) return;
-  pState.apples -= sk.priceApples;
-  pState.ownedSkins.push(id);
-  pState.equippedSkin = id;
-  saveState();
-  showCongrats(sk.emoji + ' ' + sk.name + ' 皮肤');
-}
-
-function equipFromShop(id) {
-  pState.equippedSkin = id;
-  saveState();
-  buildShop();
-}
-
-// ─── Board buy/equip ───
-function confirmBuyBoard(id) {
-  var bd = BOARDS.find(function(b){return b.id===id;});
-  if (!bd || pState.ownedBoards.includes(id)) return;
-  var price = bd.priceApples;
-  var body =
-    '<div style="font-size:2rem;margin:8px 0">' + bd.emoji + ' ' + bd.name + '</div>' +
-    '<div style="font-size:1.1rem;color:#ffcc44;margin:8px 0">确定要用 ' + price + ' 苹果购买此棋盘？</div>' +
-    '<div style="font-size:.85rem;color:#888">你有 ' + pState.apples + ' 苹果</div>';
-  var cancelFn = function(){ showShop(); };
-  if (pState.apples < price) {
-    showConfirmOverlay('\u{1F6D2} 苹果不够', '<div style="color:#ff8866">你没有足够的苹果！<br>需要 ' + price + '，你有 ' + pState.apples + '。</div>', function(){ showShop(); }, '知道了', cancelFn);
-  } else {
-    showConfirmOverlay('\u{1F6D2} 购买棋盘', body, function(){ buyBoard(id); }, '确定', cancelFn);
-  }
-}
-
-function cancelBuyBoard() {
-  document.getElementById('overlay').classList.remove('active');
-  showShop();
-}
-
-function buyBoard(id) {
-  var bd = BOARDS.find(function(b){return b.id===id;});
-  if (!bd) return;
-  if (pState.apples < bd.priceApples) return;
-  pState.apples -= bd.priceApples;
-  if (!pState.ownedBoards) pState.ownedBoards = ['default'];
-  pState.ownedBoards.push(id);
-  pState.equippedBoard = id;
-  saveState();
-  showCongrats(bd.emoji + ' ' + bd.name + ' 棋盘');
-}
-
-function equipBoard(id) {
-  pState.equippedBoard = id;
-  saveState();
-  buildShop();
-}
-
-function showCongrats(itemName) {
-  var ov = document.getElementById('overlay');
-  var ob = document.getElementById('overlayBox');
-  ob.className = 'victory';
-  document.getElementById('oTitle').textContent = '🎉 恭喜获得';
-  document.getElementById('oSub').textContent = '';
-  document.getElementById('oBody').innerHTML = '<div style="font-size:1.4rem;color:#ffcc44;margin:12px 0;font-weight:700">' + itemName + '</div>';
-  document.getElementById('oBtns').innerHTML =
-    '<button class="bank-convert-btn" onclick="afterCongrats()" style="margin-top:8px">太好了！</button>';
-  ov.classList.add('active');
-}
-
-function afterCongrats() {
-  document.getElementById('overlay').classList.remove('active');
-  showShop();
-}
-
-// ─── Backpack screen ───
-function showBackpack() {
-  showScreen('backpackScreen');
-  buildBackpack();
-}
-
-function buildBackpack() {
-  var grid = document.getElementById('bpGrid');
-  document.getElementById('bpStats').innerHTML = `
-    <div class="stat"><span class="icon">🍎</span><span class="val apple-val">${pState.apples} 苹果</span> &nbsp; <span class="icon">💰</span><span class="val">${pState.gold} 金币</span></div>
-  `;
-  grid.innerHTML = SKINS.map(function(sk) {
-    var owned = pState.ownedSkins.includes(sk.id);
-    if (!owned) return '';
-    var equipped = pState.equippedSkin === sk.id;
-    var cls = equipped ? 'bp-card equipped' : 'bp-card';
-    var badge = equipped ? '✅ 已装备' : '';
-    return '<div class="' + cls + '" onclick="equipSkin(\'' + sk.id + '\')">' +
-      '<div class="bp-emoji">' + sk.emoji + '</div>' +
-      '<div class="bp-name">' + sk.name + '</div>' +
-      (badge ? '<div class="bp-badge">' + badge + '</div>' : '') +
-    '</div>';
-  }).join('');
-}
-
-function equipSkin(id) {
-  if (!pState.ownedSkins.includes(id)) return;
-  pState.equippedSkin = id;
-  saveState();
-  buildBackpack();
-}
-
-// ═══════════════════════════════════════════
-// GAME LOGIC
-// ═══════════════════════════════════════════
-
-function startGame() {
-  pState.settings.size = selectedSize;
-  pState.settings.speed = selectedSpeed;
-  saveState();
-  GRID = selectedSize;
-  newGame();
-}
-
-function newGame() {
-  // Show game area, hide all screens
-  hideAllScreens();
-  document.getElementById('gameArea').classList.add('active');
-  document.getElementById('back').style.display = '';
-
-  // Init snake at center, length 3, moving right
-  const mid = Math.floor(GRID / 2);
-  snake = [{ x:mid, y:mid }, { x:mid-1, y:mid }, { x:mid-2, y:mid }];
-  dir = { x:1, y:0 };
-  nextDir = { x:1, y:0 };
-  score = 0;
-  growQueue = 0;
-  alive = true;
-  paused = false;
-  tickMs = SPEED_MS[selectedSpeed] || 110;
-  lastTick = 0;
-  gameState = 'playing';
-  spawnFood();
-  resizeCanvas();
-  updateHud();
-  if (tickInterval) cancelAnimationFrame(tickInterval);
-  tickInterval = requestAnimationFrame(loop);
-}
-
-function spawnFood() {
-  const occupied = new Set(snake.map(s => s.x+','+s.y));
-  const free = [];
-  for (let x=0; x<GRID; x++) {
-    for (let y=0; y<GRID; y++) {
-      if (!occupied.has(x+','+y)) free.push({x,y});
-    }
-  }
-  if (free.length === 0) { food = null; return; }
-  food = free[Math.floor(Math.random()*free.length)];
-}
-
-function calcGoldEarned(score) {
-  const key = GRID + '-' + selectedSpeed;
-  const ratio = GOLD_RATIOS[key] || 1;
-  return Math.floor(score * ratio);
-}
-
-function gameOver() {
-  alive = false;
-  gameState = 'over';
-  sfxGameOver();
-  const goldEarned = calcGoldEarned(score);
-  pState.gold += goldEarned;
-  if (score > pState.hiScore) pState.hiScore = score;
-  saveState();
-  updateHud();
-  showGameOverOverlay(goldEarned, false, 0, 0);
-}
-
-function victory() {
-  alive = false;
-  gameState = 'victory';
-  sfxVictory();
-  const goldEarned = calcGoldEarned(score);
-  pState.gold += goldEarned;
-  // Victory bonus by board size
-  var bonusGold=0, bonusApples=0;
-  if(GRID===15) bonusGold=300;
-  else if(GRID===20) bonusGold=500;
-  else if(GRID===25) bonusApples=70;
-  pState.gold += bonusGold;
-  pState.apples += bonusApples;
-  if (score > pState.hiScore) pState.hiScore = score;
-  saveState();
-  updateHud();
-  showGameOverOverlay(goldEarned, true, bonusGold, bonusApples);
-}
-
-function showGameOverOverlay(goldEarned, isVictory, bonusGold, bonusApples) {
-  overlayBox.className = isVictory ? 'victory' : 'gameover';
-  oTitle.textContent = isVictory ? '🏆 胜利！' : '💀 Game Over';
-  oSub.textContent = isVictory ? '你填满了整个棋盘！太厉害了！' : (score > pState.hiScore - 1 ? '接近最高分了！' : '再来一次！');
-  var bonusHtml = '';
-  if(isVictory && (bonusGold||bonusApples)){
-    bonusHtml='<div style="color:#ffcc44;font-size:1.1rem;margin:6px 0">🏆 霸屏奖励：';
-    if(bonusGold) bonusHtml+='+'+bonusGold+' 金币';
-    if(bonusApples) bonusHtml+='+'+bonusApples+' 苹果';
-    bonusHtml+='</div>';
-  }
-  oBody.innerHTML = `
-    <div class="scoreBig">${score}</div>
-    <div class="gold-earned">💰 +${goldEarned} 金币 (总共 ${pState.gold})</div>
-    ${bonusHtml}
-    <div class="hiscore">🏆 最高分: <b>${pState.hiScore}</b> · 🐍 长度: <b>${snake.length}</b></div>
-  `;
-  oPrompt.innerHTML = `<kbd>R</kbd> 再来一次 · <kbd>Esc</kbd> 返回菜单`;
-  oBtns.innerHTML = `
-    <button class="btn-secondary" onclick="showMainMenu()">返回菜单</button>
-    <button class="btn-primary" onclick="newGame()">再来一次</button>
-  `;
-  overlay.classList.add('active');
-  draw();
-}
-
-function updateHud() {
-  sScore.textContent = score;
-  sHi.textContent = pState.hiScore;
-  sLen.textContent = snake ? snake.length : 0;
-  sGold.textContent = pState.gold;
-  const skin = SKINS.find(s => s.id === pState.equippedSkin) || SKINS[0];
-  sSkin.textContent = skin.emoji + ' ' + skin.name;
-  hudScore.textContent = score;
-  hudHi.textContent = pState.hiScore;
-}
-
-// ─── Canvas resize ───
-function resizeCanvas() {
-  const side = (window.innerWidth > 700) ? 220 : 0;
-  const topPad = touchActive ? 46 : 0;
-  const botPad = touchActive ? 180 : 0;
-  const wAvail = window.innerWidth - side - 16;
-  const hAvail = window.innerHeight - topPad - botPad - 16;
-  const tile = Math.floor(Math.min(wAvail, hAvail) / GRID);
-  const size = tile * GRID;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = size * dpr;
-  canvas.height = size * dpr;
-  canvas.style.width = size + 'px';
-  canvas.style.height = size + 'px';
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  canvas.dataset.tile = tile;
-  draw();
-}
-window.addEventListener('resize', resizeCanvas);
-
-// ─── Game loop ───
-function loop(ts) {
-  if (gameState !== 'playing') return;
-  if (!lastTick) lastTick = ts;
-  const dt = ts - lastTick;
-  if (!paused && dt >= tickMs) {
-    lastTick = ts;
-    step();
-  }
-  draw();
-  tickInterval = requestAnimationFrame(loop);
-}
-
-function step() {
-  // Apply direction
-  if ((nextDir.x !== -dir.x || nextDir.y !== -dir.y) && (nextDir.x !== 0 || nextDir.y !== 0)) {
-    if (nextDir.x !== dir.x || nextDir.y !== dir.y) {
-      dir = nextDir;
-      sfxMove();
-    }
-  }
-  const head = snake[0];
-  let nx = (head.x + dir.x + GRID) % GRID;
-  let ny = (head.y + dir.y + GRID) % GRID;
-  const newHead = { x:nx, y:ny };
-
-  // Self-collision
-  for (let i=0; i<snake.length; i++) {
-    if (snake[i].x === newHead.x && snake[i].y === newHead.y) {
-      gameOver();
-      return;
-    }
-  }
-
-  snake.unshift(newHead);
-
-  // Eat food?
-  if (food && newHead.x === food.x && newHead.y === food.y) {
-    score++;
-    sfxEat();
-    // Check victory: snake fills entire board
-    if (snake.length === GRID * GRID) {
-      victory();
-      return;
-    }
-    spawnFood();
-  } else if (growQueue > 0) {
-    growQueue--;
-  } else {
+function gameTick(){
+  if(!gameActive) return;
+  const head = {x:snake[0].x+direction.x, y:snake[0].y+direction.y};
+  // Wall check
+  if(head.x<0||head.x>=gridSize||head.y<0||head.y>=gridSize){gameOver();return;}
+  // Self check
+  if(snake.some(s=>s.x===head.x&&s.y===head.y)){gameOver();return;}
+  snake.unshift(head);
+  if(head.x===food.x&&head.y===food.y){
+    player.gold += 2;
+    player.apples += 1;
+    player.exp += 5;
+    document.getElementById('game-score').textContent = parseInt(document.getElementById('game-score').textContent)+2;
+    document.getElementById('game-apples').textContent = parseInt(document.getElementById('game-apples').textContent)+1;
+    document.getElementById('game-length').textContent = snake.length;
+    placeFood();
+  }else{
     snake.pop();
   }
-  updateHud();
+  drawGame();
 }
 
-// ═══════════════════════════════════════════
-// RENDERING
-// ═══════════════════════════════════════════
-
-function getEquippedSkin() {
-  return SKINS.find(s => s.id === pState.equippedSkin) || SKINS[0];
-}
-
-function hexToRgb(hex) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  return {r,g,b};
-}
-
-function getSegmentColor(skin, index, total) {
-  const t = total <= 1 ? 0 : index / (total - 1);
-  const body = skin.body;
-
-  if (skin.pattern === 'rainbow') {
-    const hue = (index * 37) % 360;
-    return `hsl(${hue},80%,55%)`;
+function drawGame(){
+  ctx.fillStyle='#0a0a1a';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  // Grid
+  ctx.strokeStyle='#1a1a2e';
+  for(let i=0;i<=gridSize;i++){
+    ctx.beginPath();ctx.moveTo(i*cellSize,0);ctx.lineTo(i*cellSize,canvas.height);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,i*cellSize);ctx.lineTo(canvas.width,i*cellSize);ctx.stroke();
   }
-  if (skin.pattern === 'gradient') {
-    const c = hexToRgb(body);
-    const r = Math.round(c.r * (1 - t * 0.6));
-    const g = Math.round(c.g * (1 - t * 0.6));
-    const b = Math.round(c.b * (1 - t * 0.6));
-    return `rgb(${r},${g},${b})`;
-  }
-  if (skin.pattern === 'stripes') {
-    const c = hexToRgb(body);
-    const factor = index % 2 === 0 ? 1 : 0.55;
-    const r = Math.round(c.r * factor);
-    const g = Math.round(c.g * factor);
-    const b = Math.round(c.b * factor);
-    return `rgb(${r},${g},${b})`;
-  }
-  // solid
-  return body;
-}
-
-function getHeadColor(skin) {
-  return skin.head || skin.body;
-}
-
-function draw() {
-  const tile = parseInt(canvas.dataset.tile || '20', 10);
-  const W = canvas.width / (window.devicePixelRatio || 1);
-  const H = canvas.height / (window.devicePixelRatio || 1);
-  var boardTheme = BOARDS.find(function(b){return b.id===pState.equippedBoard;}) || BOARDS[0];
-
-  // Background
-  ctx.fillStyle = boardTheme.bg;
-  ctx.fillRect(0, 0, W, H);
-
-  // Inner playfield
-  const pad = Math.max(2, Math.floor(tile*0.08));
-  const fx = pad, fy = pad;
-  const fw = W - pad*2, fh = H - pad*2;
-  ctx.fillStyle = boardTheme.bg === '#0a0a14' ? '#0e0e1a' : boardTheme.bg;
-  ctx.fillRect(fx, fy, fw, fh);
-  ctx.strokeStyle = '#1a1a2a';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(fx+0.5, fy+0.5, fw-1, fh-1);
-
-  // Subtle grid
-  ctx.strokeStyle = boardTheme.grid;
-  ctx.lineWidth = 1;
-  for (let i=1; i<GRID; i++) {
-    ctx.beginPath(); ctx.moveTo(fx+i*tile, fy); ctx.lineTo(fx+i*tile, fy+fh); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(fx, fy+i*tile); ctx.lineTo(fx+fw, fy+i*tile); ctx.stroke();
-  }
-
   // Food
-  if (food) {
-    const cx = fx + food.x*tile + tile/2;
-    const cy = fy + food.y*tile + tile/2;
-    const r = tile*0.36;
-    const glow = ctx.createRadialGradient(cx,cy,r*0.2,cx,cy,r*2.2);
-    glow.addColorStop(0,'rgba(255,90,40,0.55)');
-    glow.addColorStop(1,'rgba(255,90,40,0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath(); ctx.arc(cx,cy,r*2.2,0,Math.PI*2); ctx.fill();
-    const grad = ctx.createRadialGradient(cx-r*0.3,cy-r*0.3,r*0.1,cx,cy,r);
-    grad.addColorStop(0,'#ffd070');
-    grad.addColorStop(0.5,'#ff7a3c');
-    grad.addColorStop(1,'#cc2a1a');
-    ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.beginPath(); ctx.arc(cx-r*0.35,cy-r*0.4,r*0.15,0,Math.PI*2); ctx.fill();
-  }
-
+  ctx.font = cellSize*0.7+'px serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('🍎', food.x*cellSize+cellSize/2, food.y*cellSize+cellSize/2);
   // Snake
-  if (snake) {
-    const skin = getEquippedSkin();
-    for (let i=snake.length-1; i>=0; i--) {
-      const s = snake[i];
-      const sx = fx + s.x*tile;
-      const sy = fy + s.y*tile;
-      const inset = Math.max(1, Math.floor(tile*0.08));
-      const isHead = i === 0;
-
-      if (isHead) {
-        ctx.fillStyle = getHeadColor(skin);
-      } else {
-        ctx.fillStyle = getSegmentColor(skin, i, snake.length);
-      }
-
-      const rad = isHead ? tile*0.25 : tile*0.18;
-      roundRect(sx+inset, sy+inset, tile-inset*2, tile-inset*2, rad);
+  snake.forEach((s,i)=>{
+    const alpha = 1 - (i/snake.length)*0.5;
+    ctx.fillStyle = `rgba(76,175,80,${alpha})`;
+    ctx.beginPath();
+    ctx.roundRect(s.x*cellSize+1, s.y*cellSize+1, cellSize-2, cellSize-2, 4);
+    ctx.fill();
+    if(i===0){
+      ctx.font=(cellSize*0.5)+'px serif';
+      ctx.fillStyle='#fff';
+      // eyes
+      const ex = direction.x*3, ey = direction.y*3;
+      ctx.beginPath();
+      ctx.arc(s.x*cellSize+cellSize*0.35+ex, s.y*cellSize+cellSize*0.35+ey, 2, 0, Math.PI*2);
+      ctx.arc(s.x*cellSize+cellSize*0.65+ex, s.y*cellSize+cellSize*0.35+ey, 2, 0, Math.PI*2);
       ctx.fill();
-
-      if (isHead) {
-        // Eyes
-        const ex = sx + tile/2;
-        const ey = sy + tile/2;
-        const offX = tile*0.18, offY = tile*0.18;
-        const e1x = ex + dir.x*offX - dir.y*offX*0.6;
-        const e1y = ey + dir.y*offY - dir.x*offY*0.6;
-        const e2x = ex + dir.x*offX + dir.y*offX*0.6;
-        const e2y = ey + dir.y*offY + dir.x*offY*0.6;
-        const er = Math.max(1.5, tile*0.08);
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(e1x,e1y,er,0,Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(e2x,e2y,er,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#000';
-        const pr = er*0.45;
-        ctx.beginPath(); ctx.arc(e1x+dir.x*pr*0.6,e1y+dir.y*pr*0.6,pr,0,Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(e2x+dir.x*pr*0.6,e2y+dir.y*pr*0.6,pr,0,Math.PI*2); ctx.fill();
-      }
-    }
-  }
-
-  // Pause indicator
-  if (gameState === 'playing' && paused) {
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(0,0,W,H);
-    ctx.fillStyle = '#fff';
-    ctx.font = `bold ${Math.floor(tile*1.2)}px Segoe UI, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('⏸ 已暂停', W/2, H/2);
-  }
-}
-
-function roundRect(x,y,w,h,r) {
-  if (w < 2*r) r = w/2;
-  if (h < 2*r) r = h/2;
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-}
-
-// ═══════════════════════════════════════════
-// INPUT
-// ═══════════════════════════════════════════
-
-document.addEventListener('keydown', e => {
-  initAudio();
-  const k = e.key;
-
-  // Menu/settings screens
-  if (gameState === 'menu') {
-    if (k === 'Enter' || k === ' ') { showSettings(); e.preventDefault(); }
-    return;
-  }
-  if (gameState === 'settings') {
-    if (k === 'Escape') { showMainMenu(); e.preventDefault(); }
-    return;
-  }
-
-  // Game over / victory
-  if (gameState === 'over' || gameState === 'victory') {
-    if (k === 'r' || k === 'R' || k === 'Enter' || k === ' ') { newGame(); e.preventDefault(); }
-    else if (k === 'Escape') { showMainMenu(); e.preventDefault(); }
-    return;
-  }
-
-  // Playing
-  if (gameState === 'playing') {
-    if (k === 'p' || k === 'P' || k === 'Escape') { togglePause(); e.preventDefault(); return; }
-    let nd = null;
-    if (k === 'w' || k === 'W' || k === 'ArrowUp') nd = {x:0,y:-1};
-    else if (k === 's' || k === 'S' || k === 'ArrowDown') nd = {x:0,y:1};
-    else if (k === 'a' || k === 'A' || k === 'ArrowLeft') nd = {x:-1,y:0};
-    else if (k === 'd' || k === 'D' || k === 'ArrowRight') nd = {x:1,y:0};
-    if (nd) { nextDir = nd; e.preventDefault(); }
-  }
-});
-
-function togglePause() {
-  if (gameState !== 'playing') return;
-  paused = !paused;
-  if (!paused) { lastTick = 0; tickInterval = requestAnimationFrame(loop); }
-}
-
-function retry() {
-  initAudio();
-  newGame();
-}
-
-// ─── Touch detection ───
-function showTouchControls() {
-  var tc = document.getElementById('touchControls');
-  if (tc.classList.contains('active')) return;
-  tc.classList.add('active');
-  document.body.classList.add('touch-active');
-  touchActive = true;
-  applyControlMode();
-  window.removeEventListener('touchstart', showTouchControls);
-  window.removeEventListener('touchmove', showTouchControls);
-  setTimeout(resizeCanvas, 50);
-}
-
-function applyControlMode() {
-  var mode = pState.settings.control || 'joystick';
-  var joy = document.getElementById('joystick');
-  var dpad = document.getElementById('dpadControls');
-  if (mode === 'dpad') {
-    joy.style.display = 'none';
-    dpad.style.display = 'block';
-  } else {
-    joy.style.display = '';
-    dpad.style.display = 'none';
-  }
-}
-
-function changeDir(dx, dy) {
-  if (gameState !== 'playing') return;
-  var nd = { x: dx, y: dy };
-  if (nd.x !== -dir.x || nd.y !== -dir.y) {
-    nextDir = nd;
-  }
-}
-window.addEventListener('touchstart', showTouchControls, {passive:true});
-window.addEventListener('touchmove', showTouchControls, {passive:true});
-if ('ontouchstart' in window || navigator.maxTouchPoints > 0) showTouchControls();
-
-// ─── Joystick ───
-(function setupJoystick() {
-  const knob = document.getElementById('joystickKnob');
-  const base = document.getElementById('joystickBase');
-  let joyActive = false, joyId = null;
-  const deadZone = 14;
-
-  function getJoyCenter() {
-    const r = base.getBoundingClientRect();
-    return { x:r.left+r.width/2, y:r.top+r.height/2, maxR:r.width/2-8 };
-  }
-  function setKnob(dx, dy, maxR) {
-    const dist = Math.sqrt(dx*dx+dy*dy);
-    if (dist > maxR) { dx=dx/dist*maxR; dy=dy/dist*maxR; }
-    knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-  }
-  function calcDir(dx, dy) {
-    const dist = Math.sqrt(dx*dx+dy*dy);
-    if (dist < deadZone) return {x:0,y:0};
-    const angle = Math.atan2(dy,dx)*180/Math.PI;
-    if (angle >= -45 && angle < 45) return {x:1,y:0};
-    if (angle >= 45 && angle < 135) return {x:0,y:1};
-    if (angle >= -135 && angle < -45) return {x:0,y:-1};
-    return {x:-1,y:0};
-  }
-
-  base.addEventListener('touchstart', e => {
-    e.preventDefault();
-    initAudio();
-    if (gameState === 'menu') { showSettings(); return; }
-    if (gameState === 'over' || gameState === 'victory') { newGame(); return; }
-    if (paused) togglePause();
-    joyActive = true;
-    joyId = e.changedTouches[0].identifier;
-    const c = getJoyCenter(), t = e.changedTouches[0];
-    const dx = t.clientX-c.x, dy = t.clientY-c.y;
-    setKnob(dx,dy,c.maxR);
-    const d = calcDir(dx,dy);
-    if (d.x !== 0 || d.y !== 0) nextDir = d;
-  }, {passive:false});
-
-  document.addEventListener('touchmove', e => {
-    if (!joyActive) return;
-    for (let i=0; i<e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === joyId) {
-        const c = getJoyCenter(), t = e.changedTouches[i];
-        const dx = t.clientX-c.x, dy = t.clientY-c.y;
-        setKnob(dx,dy,c.maxR);
-        const d = calcDir(dx,dy);
-        if (d.x !== 0 || d.y !== 0) nextDir = d;
-        break;
-      }
-    }
-  }, {passive:true});
-
-  document.addEventListener('touchend', e => {
-    if (!joyActive) return;
-    for (let i=0; i<e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === joyId) {
-        joyActive = false; joyId = null;
-        knob.style.transform = 'translate(-50%,-50%)';
-        break;
-      }
     }
   });
-  document.addEventListener('touchcancel', () => {
-    joyActive = false; joyId = null;
-    knob.style.transform = 'translate(-50%,-50%)';
-  });
-
-  // Tap overlay to restart/dismiss (mobile)
-  overlay.addEventListener('touchstart', e => {
-    e.preventDefault();
-    initAudio();
-    if (gameState === 'over' || gameState === 'victory') newGame();
-  }, {passive:false});
-})();
-
-// ═══════════════════════════════════════════
-// BOOT
-// ═══════════════════════════════════════════
-
-showMainMenu();
-
-// ── Floating Ice button (draggable, snaps to edge) ──
-(function(){
-var b=document.getElementById('iceBtn');if(!b)return;
-var drag=false,moved=false,sx,sy,ox,oy;
-b.addEventListener('pointerdown',function(e){
-  drag=true;moved=false;
-  sx=e.clientX;sy=e.clientY;
-  var r=b.getBoundingClientRect();ox=e.clientX-r.left;oy=e.clientY-r.top;
-  b.setPointerCapture(e.pointerId);e.preventDefault();
-});
-b.addEventListener('pointermove',function(e){
-  if(!drag)return;
-  var dx=e.clientX-sx,dy=e.clientY-sy;
-  if(Math.abs(dx)>4||Math.abs(dy)>4)moved=true;
-  var x=e.clientX-ox,y=e.clientY-oy;
-  b.style.left=x+'px';b.style.top=y+'px';b.style.right='auto';b.style.bottom='auto';
-});
-b.addEventListener('pointerup',function(e){
-  if(!drag)return;drag=false;
-  if(!moved){location.href='../index.html';return;}
-  // snap to nearest edge (left or right)
-  var r=b.getBoundingClientRect();
-  var midY=r.top+r.height/2;
-  if(r.left+r.width/2<window.innerWidth/2){
-    b.style.left='6px';b.style.right='auto';
-  }else{
-    b.style.left='auto';b.style.right='6px';
-  }
-  // clamp vertical
-  var maxY=window.innerHeight-r.height-6;
-  var fy=Math.max(6,Math.min(parseInt(b.style.top)||r.top,maxY));
-  b.style.top=fy+'px';b.style.bottom='auto';
-});
-})();
-
-function toggleFullscreen() {
-  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-    var el = document.documentElement;
-    (el.requestFullscreen || el.webkitRequestFullscreen || function(){}).call(el);
-  } else {
-    (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
-  }
 }
+
+function gameOver(){
+  gameActive = false;
+  clearInterval(gameLoop);
+  const score = document.getElementById('game-score').textContent;
+  const apples = document.getElementById('game-apples').textContent;
+  savePlayer();
+  setTimeout(()=>{
+    alert(`游戏结束！\n💰 ${score} 金币 | 🍎 ${apples} 苹果\n蛇长：${snake.length}`);
+    showPage('home');
+  },100);
+}
+
+function endGame(){
+  gameActive = false;
+  clearInterval(gameLoop);
+  savePlayer();
+  showPage('home');
+}
+
+// Controls
+document.addEventListener('keydown', e=>{
+  if(!gameActive) return;
+  const map = {ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},
+    w:{x:0,y:-1},s:{x:0,y:1},a:{x:-1,y:0},d:{x:1,y:0}};
+  const d = map[e.key];
+  if(d && !(d.x===-direction.x && d.y===-direction.y)){
+    direction = d;
+    e.preventDefault();
+  }
+});
+
+// Touch controls
+let touchStart = null;
+document.addEventListener('touchstart', e=>{
+  if(currentPage!=='game') return;
+  touchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY};
+});
+document.addEventListener('touchend', e=>{
+  if(!touchStart||currentPage!=='game') return;
+  const dx = e.changedTouches[0].clientX - touchStart.x;
+  const dy = e.changedTouches[0].clientY - touchStart.y;
+  if(Math.abs(dx)<20 && Math.abs(dy)<20) return;
+  let d;
+  if(Math.abs(dx)>Math.abs(dy)) d = dx>0?{x:1,y:0}:{x:-1,y:0};
+  else d = dy>0?{x:0,y:1}:{x:0,y:-1};
+  if(!(d.x===-direction.x && d.y===-direction.y)) direction = d;
+  touchStart = null;
+});
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click', e=>{
+    if(e.target===el) el.classList.remove('active');
+  });
+});
+
+// ===== INIT =====
+loadPlayer();
+refreshHome();
 </script>
 </body>
 </html>

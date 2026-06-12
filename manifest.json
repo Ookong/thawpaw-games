@@ -16,6 +16,14 @@
       "icon": "dungeon",
       "description": "Crawl through endless dungeons! Slay monsters, collect gold, go deeper!",
       "color": "#aa44ff"
+    },
+    {
+      "id": "snake",
+      "name": "Snake Game",
+      "file": "games/snake.html",
+      "icon": "snake",
+      "description": "Classic snake with shops, banks, and backpacks!",
+      "color": "#4caf50"
     }
   ]
 }
