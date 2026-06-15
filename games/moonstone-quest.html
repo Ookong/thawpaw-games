@@ -1,161 +1,432 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Moonstone Quest</title>
+<title>猫武士大冒险</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-html { height:100%; }
-body { background:#0a0a14; color:#ccc; font-family:'Courier New',monospace; height:100vh; height:100dvh; display:flex; flex-direction:column; overflow:hidden;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom); }
-a { color:#88aaff; }
-#back { position:fixed; top:8px; left:10px; z-index:100; font-size:13px; color:#6688aa; text-decoration:none; }
-#back:hover { color:#aaccff; }
-#wrap { display:flex; flex:1; min-height:0; }
-#canvasWrap { flex:1; display:flex; align-items:center; justify-content:center; min-width:0; position:relative; }
-canvas { display:block; }
-#sidebar { width:260px; background:#0e0e1a; border-left:1px solid #222; padding:14px; overflow-y:auto; font-size:16px; line-height:1.6; flex-shrink:0; display:flex; flex-direction:column; }
-#sidebar h2 { color:#aaddff; font-size:20px; margin-bottom:8px; }
-#sidebar .stat { margin:2px 0; }
-#sidebar .stat .label { color:#888; }
-#sidebar .stat .val { color:#ddd; }
-#hpBar { width:100%; height:14px; background:#1a1a2a; border:1px solid #333; border-radius:3px; overflow:hidden;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom); margin:3px 0; }
-#hpFill { height:100%; background:#44cc44; transition:width .2s; }
-#expBar { width:100%; height:10px; background:#1a1a2a; border:1px solid #333; border-radius:3px; overflow:hidden;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom); margin:2px 0; }
-#expFill { height:100%; background:#aa44ff; transition:width .2s; }
-#msgLog { margin-top:8px; flex:1; overflow-y:auto; }
-#msgLog .msg { color:#aaa; font-size:14px; margin:1px 0; word-wrap:break-word; }
-#msgLog .msg.hurt { color:#ff6666; }
-#msgLog .msg.good { color:#66ff66; }
-#msgLog .msg.info { color:#6688ff; }
-#msgLog .msg.gold { color:#ffcc44; }
-
-/* ── Touch controls overlay ── */
-#touchControls { display:none; position:fixed; bottom:0; left:0; right:0; height:160px; z-index:40; pointer-events:none; }
-#touchControls.active { display:block; }
-
-/* Joystick */
-#joystick { position:absolute; bottom:20px; left:20px; width:120px; height:120px; pointer-events:auto; }
-#joystickBase { width:120px; height:120px; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.15); border-radius:50%; position:relative; }
-#joystickKnob { width:50px; height:50px; background:rgba(255,255,255,.25); border:2px solid rgba(255,255,255,.35); border-radius:50%; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); transition:none; }
-
-/* Action buttons (right side) */
-#touchActions { position:absolute; bottom:15px; right:15px; display:grid; grid-template-columns:repeat(4,1fr); gap:5px; pointer-events:auto; }
-#touchActions button { width:64px; height:54px; background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.18); border-radius:10px; color:#ccc; font-size:12px; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
-#touchActions button:active { background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.35); }
-#touchActions button .icon { font-size:20px; }
-#touchActions button .label { font-size:8px; opacity:.7; }
-
-
-/* ── Mobile HUD overlay ── */
-#mobileHud { display:none; position:fixed; top:0; left:0; right:0; z-index:30; background:rgba(10,10,20,.82); backdrop-filter:blur(4px); padding:4px 10px 5px; font-size:11px; pointer-events:none; }
-#mobileHud .hud-row { display:flex; align-items:center; gap:8px; }
-#mobileHud .hud-row+.hud-row { margin-top:2px; }
-#mobileHud .hud-hpbar { flex:1; height:10px; background:#1a1a2a; border:1px solid #333; border-radius:2px; overflow:hidden;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom); }
-#mobileHud .hud-hpfill { height:100%; background:#44cc44; transition:width .2s; }
-#mobileHud .hud-expbar { width:80px; height:6px; background:#1a1a2a; border:1px solid #333; border-radius:2px; overflow:hidden;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom); }
-#mobileHud .hud-expfill { height:100%; background:#aa44ff; transition:width .2s; }
-#mobileHud .hud-label { color:#888; white-space:nowrap; }
-#mobileHud .hud-val { color:#ddd; white-space:nowrap; }
-#mobileHud .hud-msg { color:#aaa; font-size:10px; overflow:hidden;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom); white-space:nowrap; text-overflow:ellipsis; max-width:100%; }
-/* ── Mobile layout ── */
-@media (max-width:700px) {
-  body.touch-active #sidebar { display:none; }
-  body.touch-active #mobileHud { display:block; }
-  body.touch-active #wrap { flex-direction:column; }
-  body.touch-active #canvasWrap { padding-top:52px; }
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#1a1a2e;--card:#16213e;--card2:#0f3460;--accent:#aaddff;
+  --gold:#ffd700;--moon:#aaddff;--rock:#888888;--text:#eee;--text2:#aaa;
+  --radius:12px;
 }
-@media (max-width:400px) {
-  #sidebar { max-height:20vh; padding:3px 6px; font-size:10px; }
-  #sidebar h2 { font-size:12px; }
-  #msgLog { max-height:28px; }
-  #joystick { bottom:10px; left:10px; width:100px; height:100px; }
-  #joystickBase { width:100px; height:100px; }
-  #joystickKnob { width:40px; height:40px; }
-  #touchActions { bottom:8px; right:8px; gap:5px; }
-  #touchActions button { width:56px; height:46px; }
-  #touchActions button .icon { font-size:18px; }
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh;}
+a{color:#88aaff;}
+
+/* ===== PAGES ===== */
+.page{display:none;width:100%;min-height:100vh;}
+.page.active{display:flex;flex-direction:column;}
+
+/* ===== TOP BAR (home + game) ===== */
+.top-bar{display:flex;align-items:center;padding:10px 16px;background:var(--card);gap:12px;cursor:pointer;min-height:56px;}
+.profile-bubble{display:flex;align-items:center;gap:10px;flex:1;}
+.home-currency-bubble{background:var(--card2);border-radius:20px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap;}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid var(--accent);}
+.profile-info{display:flex;flex-direction:column;gap:2px;}
+.profile-info .name-row{display:flex;align-items:center;gap:6px;}
+.profile-info .nickname{font-weight:600;font-size:15px;}
+.level-badge{font-size:11px;background:var(--accent);color:#000;padding:1px 6px;border-radius:8px;font-weight:700;}
+.level-bar-wrap{height:4px;background:#333;border-radius:2px;width:80px;margin-top:2px;}
+.level-bar{height:100%;background:var(--gold);border-radius:2px;width:30%;transition:width .3s;}
+
+/* ===== BOTTOM BAR (home: bank/shop/bag) ===== */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--card);display:flex;align-items:center;justify-content:space-around;border-top:1px solid #333;z-index:100;}
+.bottom-bar .tab{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:6px 16px;border-radius:8px;transition:background .2s;font-size:12px;}
+.bottom-bar .tab:hover,.bottom-bar .tab.active{background:var(--card2);}
+.bottom-bar .tab .icon{font-size:20px;}
+
+/* ===== HOME PAGE LAYOUT (3 cols: 1/4 + 1/2 + 1/4) ===== */
+.home-content{flex:1;display:grid;grid-template-columns:1fr 2fr 1fr;gap:8px;padding:12px;padding-bottom:72px;min-height:calc(100vh - 56px);}
+.home-content .col{display:flex;flex-direction:column;gap:8px;}
+
+/* Left 1/4 */
+.col-left{justify-content:center;align-items:center;color:var(--text2);font-size:13px;}
+
+/* Center 1/2 (merged lc + rc) — split into upper + lower zones */
+.col-mid{gap:10px;}
+.zone-upper,.zone-lower{
+  background:linear-gradient(135deg,var(--card2),#1a1a3e);
+  border-radius:var(--radius);
+  padding:18px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  cursor:pointer;
+  transition:transform .15s,box-shadow .15s;
+  border:1px solid #2a2a4e;
+  text-align:center;
+}
+.zone-upper:hover,.zone-lower:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(170,221,255,.2);}
+.zone-icon{font-size:42px;}
+.zone-title{font-size:20px;font-weight:700;color:var(--accent);}
+.zone-desc{font-size:12px;color:var(--text2);margin-top:2px;}
+.zone-lower{background:linear-gradient(135deg,#2a1a3e,#1a1a2e);}
+.zone-lower .zone-title{color:#ffaadd;}
+
+/* Right 1/4 */
+.col-right{gap:8px;}
+.col-right .top-row{display:flex;gap:6px;}
+.col-right .top-row .mini-card{flex:1;background:var(--card2);border-radius:var(--radius);padding:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;transition:transform .15s;}
+.col-right .top-row .mini-card:hover{transform:scale(1.05);}
+.col-right .top-row .mini-card .icon{font-size:22px;display:block;margin-bottom:4px;}
+.hot-events{background:var(--card2);border-radius:var(--radius);padding:14px;flex:1;overflow-y:auto;}
+.hot-events h3{font-size:13px;margin-bottom:8px;color:var(--gold);}
+.hot-events .event-item{padding:8px;border-bottom:1px solid #333;font-size:12px;color:var(--text2);}
+.hot-events .event-item:last-child{border-bottom:none;}
+
+/* ===== PROFILE PAGE ===== */
+.profile-page{align-items:center;padding:20px;padding-bottom:80px;gap:16px;}
+.profile-page .big-avatar{width:90px;height:90px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:48px;border:3px solid var(--accent);cursor:pointer;transition:transform .2s;position:relative;}
+.profile-page .big-avatar:hover{transform:scale(1.05);}
+.profile-page .big-avatar::after{content:'📷';position:absolute;bottom:0;right:0;font-size:16px;}
+.profile-page .name-section{text-align:center;}
+.profile-page .name-section .name-line{display:flex;align-items:center;justify-content:center;gap:8px;}
+.profile-page .name-section .nickname{font-size:20px;font-weight:700;}
+.profile-page .name-section .edit-btn{cursor:pointer;font-size:16px;}
+.profile-page .explorer-id{color:var(--text2);font-size:13px;margin-top:4px;}
+.profile-page .bio{color:var(--text2);font-size:13px;margin-top:2px;min-height:18px;}
+.profile-page .level-section{width:100%;max-width:300px;}
+.profile-page .level-info{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.profile-page .level-bar-wrap{height:8px;background:#333;border-radius:4px;}
+.profile-page .level-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:4px;width:30%;}
+.back-btn{position:absolute;top:12px;left:12px;cursor:pointer;font-size:24px;z-index:10;}
+
+/* ===== LEVEL MAP PAGE ===== */
+.levelmap-page{padding:20px 16px 80px;gap:14px;align-items:center;}
+.levelmap-header{text-align:center;margin-top:8px;}
+.levelmap-header h1{font-size:22px;color:var(--accent);font-weight:700;}
+.levelmap-header p{color:var(--text2);font-size:13px;margin-top:4px;}
+.level-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;width:100%;max-width:480px;padding:8px;}
+.level-card{aspect-ratio:1;background:linear-gradient(135deg,var(--card2),#1a1a3e);border:2px solid #334488;border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all .15s;position:relative;}
+.level-card:hover:not(.locked){transform:translateY(-3px);box-shadow:0 4px 12px rgba(170,221,255,.3);}
+.level-card.boss{border-color:#ff6688;background:linear-gradient(135deg,#3a1a2e,#1a1a2e);}
+.level-card.current{border-color:var(--gold);box-shadow:0 0 12px rgba(255,215,0,.4);}
+.level-card.locked{opacity:.4;cursor:not-allowed;}
+.level-card .lvl-num{font-size:24px;font-weight:700;color:var(--accent);}
+.level-card.boss .lvl-num{color:#ff6688;}
+.level-card .lvl-icon{font-size:18px;}
+.level-card .lvl-status{font-size:10px;color:var(--text2);}
+.levelmap-actions{display:flex;gap:10px;margin-top:10px;}
+.action-btn{background:var(--accent);color:#000;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:transform .15s;}
+.action-btn:hover{transform:scale(1.05);}
+.action-btn.secondary{background:var(--card2);color:var(--text);}
+
+/* ===== GAME PAGE ===== */
+.game-page{align-items:center;justify-content:center;position:relative;background:#0a0a14;}
+.game-page canvas{border:2px solid var(--card2);border-radius:8px;background:#0a0a1a;}
+.game-page .game-top{display:flex;justify-content:space-between;align-items:center;width:100%;padding:8px 12px;background:rgba(10,10,20,.8);font-size:12px;}
+.game-page .game-back{position:absolute;top:10px;left:10px;cursor:pointer;font-size:22px;z-index:10;background:rgba(10,10,20,.6);padding:4px 10px;border-radius:8px;}
+.game-page .game-exit{position:absolute;top:10px;right:10px;cursor:pointer;font-size:13px;z-index:10;background:rgba(170,68,68,.4);padding:5px 12px;border-radius:8px;color:#ffaaaa;font-weight:600;}
+
+/* Mobile HUD overlay (game) */
+#mobileHud{display:none;position:fixed;top:0;left:0;right:0;z-index:30;background:rgba(10,10,20,.82);backdrop-filter:blur(4px);padding:4px 10px 5px;font-size:11px;pointer-events:none;}
+#mobileHud .hud-row{display:flex;align-items:center;gap:8px;}
+#mobileHud .hud-row+.hud-row{margin-top:2px;}
+#mobileHud .hud-hpbar{flex:1;height:10px;background:#1a1a2a;border:1px solid #333;border-radius:2px;overflow:hidden;}
+#mobileHud .hud-hpfill{height:100%;background:#44cc44;transition:width .2s;}
+#mobileHud .hud-expbar{width:80px;height:6px;background:#1a1a2a;border:1px solid #333;border-radius:2px;overflow:hidden;}
+#mobileHud .hud-expfill{height:100%;background:#aa44ff;transition:width .2s;}
+#mobileHud .hud-label{color:#888;white-space:nowrap;}
+#mobileHud .hud-val{color:#ddd;white-space:nowrap;}
+#mobileHud .hud-msg{color:#aaa;font-size:10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;}
+
+/* ===== TOUCH CONTROLS (game) ===== */
+#touchControls{display:none;position:fixed;bottom:0;left:0;right:0;height:160px;z-index:40;pointer-events:none;}
+#touchControls.active{display:block;}
+#joystick{position:absolute;bottom:20px;left:20px;width:120px;height:120px;pointer-events:auto;}
+#joystickBase{width:120px;height:120px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);border-radius:50%;position:relative;}
+#joystickKnob{width:50px;height:50px;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.35);border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none;}
+#touchActions{position:absolute;bottom:15px;right:15px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;pointer-events:auto;}
+#touchActions button{width:64px;height:54px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.18);border-radius:10px;color:#ccc;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;}
+#touchActions button:active{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);}
+#touchActions button .icon{font-size:20px;}
+#touchActions button .label{font-size:8px;opacity:.7;}
+@media (max-width:400px){
+  #joystick{bottom:10px;left:10px;width:100px;height:100px;}
+  #joystickBase{width:100px;height:100px;}
+  #joystickKnob{width:40px;height:40px;}
+  #touchActions{bottom:8px;right:8px;gap:5px;}
+  #touchActions button{width:56px;height:46px;}
+  #touchActions button .icon{font-size:18px;}
 }
 
-/* Desktop controls (hidden on touch) */
-#controls { display:none; padding:6px 8px 10px; background:#0e0e1a; border-top:1px solid #222; flex-shrink:0; }
-#controls > div { display:flex; align-items:center; justify-content:center; gap:0; }
-#dpad { display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(2,1fr); width:144px; height:96px; gap:3px; flex-shrink:0; }
-#dpad button { width:100%; height:100%; background:#1a1a2e; border:1px solid #333; color:#ccc; font-size:22px; border-radius:8px; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
-#dpad button:active { background:#2a2a4e; color:#fff; }
-#actionBtns { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-left:16px; flex:1; max-width:260px; }
-#actionBtns button { height:38px; background:#1a1a2e; border:1px solid #333; color:#ccc; font-size:12px; border-radius:8px; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; white-space:nowrap; }
-#actionBtns button:active { background:#2a2a4e; color:#fff; }
+/* Desktop controls (dpad) */
+#controls{display:none;padding:6px 8px 10px;background:#0e0e1a;border-top:1px solid #222;flex-shrink:0;}
+#controls>div{display:flex;align-items:center;justify-content:center;gap:0;}
+#dpad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);width:144px;height:96px;gap:3px;flex-shrink:0;}
+#dpad button{width:100%;height:100%;background:#1a1a2e;border:1px solid #333;color:#ccc;font-size:22px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+#dpad button:active{background:#2a2a4e;color:#fff;}
+#actionBtns{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-left:16px;flex:1;max-width:260px;}
+#actionBtns button{height:38px;background:#1a1a2e;border:1px solid #333;color:#ccc;font-size:12px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;white-space:nowrap;}
+#actionBtns button:active{background:#2a2a4e;color:#fff;}
 
-#shopOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.85); z-index:50; justify-content:center; align-items:center; }
-#shopBox { background:#12122a; border:2px solid #3355aa; border-radius:10px; padding:18px 22px; max-width:420px; width:90%; max-height:85vh; overflow-y:auto; position:relative; }
-#shopBox h2 { color:#ffcc44; text-align:center; margin-bottom:10px; }
-#shopBox .shopItem { display:flex; align-items:center; padding:6px 0; border-bottom:1px solid #1a1a2e; cursor:pointer; }
-#shopBox .shopItem:hover { background:#1a1a3e; }
-#shopBox .shopItem .siIcon { width:28px; text-align:center; font-size:16px; }
-#shopBox .shopItem .siName { flex:1; color:#ccc; font-size:13px; }
-#shopBox .shopItem .siCost { color:#ffcc44; font-size:13px; margin-right:10px; }
-#shopBox .shopItem .siDesc { color:#777; font-size:11px; display:none; }
-#shopBox .shopMsg { color:#66ff66; text-align:center; margin-top:8px; font-size:12px; min-height:16px; }
-#shopBox .shopClose { text-align:center; margin-top:10px; color:#888; font-size:12px; }
-#shopCloseBtn { position:absolute; top:10px; right:14px; background:none; border:none; color:#888; font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; }
-#shopCloseBtn:hover { color:#ff6644; background:rgba(255,255,255,.05); }
-#controls.touch-active { display:block; text-align:center; }
+/* Sidebar (game, desktop) */
+#game-sidebar{width:260px;background:#0e0e1a;border-left:1px solid #222;padding:14px;overflow-y:auto;font-size:16px;line-height:1.6;flex-shrink:0;display:flex;flex-direction:column;}
+#game-sidebar h2{color:#aaddff;font-size:20px;margin-bottom:8px;}
+#game-sidebar .stat{margin:2px 0;}
+#game-sidebar .stat .label{color:#888;}
+#game-sidebar .stat .val{color:#ddd;}
+#hpBar,#expBar{width:100%;background:#1a1a2a;border:1px solid #333;border-radius:3px;overflow:hidden;margin:3px 0;}
+#hpBar{height:14px;}
+#expBar{height:10px;}
+#hpFill{height:100%;background:#44cc44;transition:width .2s;}
+#expFill{height:100%;background:#aa44ff;transition:width .2s;}
+#msgLog{margin-top:8px;flex:1;overflow-y:auto;}
+#msgLog .msg{color:#aaa;font-size:14px;margin:1px 0;word-wrap:break-word;}
+#msgLog .msg.hurt{color:#ff6666;}
+#msgLog .msg.good{color:#66ff66;}
+#msgLog .msg.info{color:#6688ff;}
+#msgLog .msg.gold{color:#ffcc44;}
 
-/* ── Floating Ice button ── */
-#iceBtn{position:fixed;z-index:999;width:44px;height:44px;border-radius:50%;background:rgba(170,220,255,.18);border:1.5px solid rgba(170,220,255,.35);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;transition:background .15s;}
+/* In-game shop overlay */
+#shopOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:50;justify-content:center;align-items:center;}
+#shopBox{background:#12122a;border:2px solid #3355aa;border-radius:10px;padding:18px 22px;max-width:420px;width:90%;max-height:85vh;overflow-y:auto;position:relative;}
+#shopBox h2{color:#ffcc44;text-align:center;margin-bottom:10px;}
+#shopBox .shopItem{display:flex;align-items:center;padding:6px 0;border-bottom:1px solid #1a1a2e;cursor:pointer;}
+#shopBox .shopItem:hover{background:#1a1a3e;}
+#shopBox .shopItem .siIcon{width:28px;text-align:center;font-size:16px;}
+#shopBox .shopItem .siName{flex:1;color:#ccc;font-size:13px;}
+#shopBox .shopItem .siCost{color:#ffcc44;font-size:13px;margin-right:10px;}
+#shopBox .shopMsg{color:#66ff66;text-align:center;margin-top:8px;font-size:12px;min-height:16px;}
+#shopCloseBtn{position:absolute;top:10px;right:14px;background:none;border:none;color:#888;font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;}
+#shopCloseBtn:hover{color:#ff6644;background:rgba(255,255,255,.05);}
+
+/* ===== MODAL / OVERLAY (home modals) ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--card);border-radius:var(--radius);padding:20px;width:90%;max-width:480px;max-height:80vh;overflow:hidden;position:relative;display:flex;flex-direction:column;}
+.modal .modal-close{position:absolute;top:10px;right:14px;cursor:pointer;font-size:22px;color:#888;z-index:1;}
+.modal .modal-close:hover{color:#ff6644;}
+.modal h3{margin-bottom:12px;font-size:18px;text-align:center;color:var(--accent);}
+.modal-body{flex:1;overflow-y:auto;}
+
+/* ===== BANK ===== */
+.bank-content{padding:8px 4px;}
+.bank-intro{text-align:center;font-size:13px;color:var(--text2);margin-bottom:14px;}
+.bank-exchange{background:var(--card2);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+.bank-rate{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;font-size:14px;font-weight:600;}
+.bank-rate .arrow{color:var(--gold);font-size:18px;}
+.bank-controls{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bank-controls input[type=number]{background:#1a1a2e;border:1px solid #444;color:var(--text);padding:8px 10px;border-radius:8px;width:80px;font-size:16px;text-align:center;}
+.bank-controls .eq{font-size:14px;color:var(--text2);}
+.bank-preview{text-align:center;font-size:13px;color:var(--gold);margin-bottom:8px;}
+.bank-btns{display:flex;gap:8px;}
+.bank-btns button{flex:1;padding:10px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;background:var(--accent);color:#000;}
+.bank-btns button:hover{filter:brightness(1.15);}
+.bank-btns button.secondary{background:var(--card);color:var(--text);border:1px solid #444;}
+.bank-balance{text-align:center;font-size:12px;color:var(--text2);margin-top:6px;}
+
+/* ===== SHOP / BAG / ACTIVITIES / WELFARE (sidebar+main pattern) ===== */
+.cat-content{display:flex;height:60vh;gap:0;}
+.cat-sidebar{width:90px;background:var(--card2);border-radius:var(--radius) 0 0 var(--radius);overflow-y:auto;flex-shrink:0;}
+.cat-sidebar .cat{padding:14px 8px;text-align:center;cursor:pointer;font-size:12px;border-bottom:1px solid #333;transition:background .2s;color:var(--text);}
+.cat-sidebar .cat.active{background:var(--accent);color:#000;font-weight:700;}
+.cat-main{flex:1;background:var(--bg);border-radius:0 var(--radius) var(--radius) 0;padding:14px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;}
+.cat-item{background:var(--card2);border-radius:8px;padding:12px;cursor:pointer;transition:transform .15s;text-align:center;border:1px solid transparent;}
+.cat-item:hover{transform:translateY(-2px);border-color:var(--accent);}
+.cat-item .item-icon{font-size:32px;margin-bottom:6px;}
+.cat-item .item-name{font-size:13px;font-weight:600;margin-bottom:4px;}
+.cat-item .item-desc{font-size:11px;color:var(--text2);margin-bottom:4px;min-height:14px;}
+.cat-item .item-price{font-size:12px;color:var(--gold);font-weight:700;}
+.cat-empty{padding:40px 20px;text-align:center;color:var(--text2);font-size:13px;grid-column:1/-1;}
+
+/* ===== MORE MODES ===== */
+.moremodes-content{display:flex;flex-direction:column;gap:12px;padding:8px 0;}
+.moremodes-item{background:var(--card2);border-radius:var(--radius);padding:16px;cursor:pointer;transition:transform .15s,box-shadow .15s;border:2px solid transparent;}
+.moremodes-item:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(170,221,255,.15);}
+.moremodes-item.active{border-color:var(--gold);}
+.moremodes-item .mm-icon{font-size:32px;margin-bottom:6px;}
+.moremodes-item .mm-name{font-size:16px;font-weight:700;color:var(--accent);margin-bottom:4px;}
+.moremodes-item .mm-desc{font-size:12px;color:var(--text2);}
+
+/* ===== AVATAR PICKER ===== */
+.avatar-picker{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:10px;padding:4px;}
+.avatar-option{width:48px;height:48px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;border:2px solid transparent;transition:border .2s;margin:0 auto;}
+.avatar-option:hover,.avatar-option.selected{border-color:var(--accent);}
+
+/* Confirm dialog */
+.confirm-dialog{text-align:center;}
+.confirm-dialog .confirm-text{margin:16px 0;font-size:15px;}
+.confirm-dialog .confirm-btns{display:flex;gap:10px;justify-content:center;}
+.confirm-dialog .confirm-btns button{padding:8px 24px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;}
+.confirm-dialog .btn-yes{background:var(--accent);color:#000;}
+.confirm-dialog .btn-no{background:#444;color:var(--text);}
+
+/* Toast notification */
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:var(--gold);padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;}
+.toast.show{opacity:1;}
+
+/* Floating Ice button */
+#iceBtn{position:fixed;z-index:999;width:44px;height:44px;border-radius:50%;background:rgba(170,220,255,.18);border:1.5px solid rgba(170,220,255,.35);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;transition:background .15s;left:6px;top:80px;}
 #iceBtn:active{background:rgba(170,220,255,.35);}
 
-/* ── Mode selection overlay ── */
-#modeOverlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,10,20,.92); z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-#modeBox { background:#12122a; border:2px solid #3355aa; border-radius:14px; padding:24px 28px; max-width:420px; width:90%; text-align:center; box-shadow:0 8px 32px rgba(80,120,255,.18); }
-#modeBox h1 { color:#aaddff; font-size:24px; margin-bottom:18px; }
-#modeBox .modeBtn { display:block; width:100%; padding:14px 12px; margin:10px 0; background:#1a1a3e; border:2px solid #334488; border-radius:10px; color:#ddeeff; font-size:18px; font-family:'Courier New',monospace; cursor:pointer; transition:all .15s; }
-#modeBox .modeBtn:hover, #modeBox .modeBtn:focus { background:#2a2a5e; border-color:#aaddff; outline:none; transform:translateY(-1px); }
-#modeBox .modeBtn .icon { font-size:24px; margin-right:8px; }
-#modeBox .modeBtn .sub { display:block; font-size:11px; color:#888; margin-top:3px; }
-#modeBox .hint { color:#666; font-size:11px; margin-top:14px; }
-
-/* Duo-specific: hide second joystick by default; reveal only in duo */
-#joystick2 { display:none; }
-body.duo-mode #joystick2 { display:block; position:absolute; bottom:20px; right:20px; width:120px; height:120px; pointer-events:auto; }
-body.duo-mode #joystick1 { right:auto; }
-#joystick2 #joystickBase2 { width:120px; height:120px; background:rgba(255,180,120,.10); border:2px solid rgba(255,180,120,.22); border-radius:50%; position:relative; }
-#joystick2 #joystickKnob2 { width:50px; height:50px; background:rgba(255,180,120,.30); border:2px solid rgba(255,180,120,.40); border-radius:50%; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); transition:none; }
-@media (max-width:400px) {
-  body.duo-mode #joystick2 { bottom:10px; right:10px; width:100px; height:100px; }
-  body.duo-mode #joystick2 #joystickBase2 { width:100px; height:100px; }
-  body.duo-mode #joystick2 #joystickKnob2 { width:40px; height:40px; }
+/* Mobile layout tweaks */
+@media (max-width:700px){
+  body.touch-active #game-sidebar{display:none;}
+  body.touch-active #mobileHud{display:block;}
+  body.touch-active #controls{display:none;}
+  .level-grid{grid-template-columns:repeat(5,1fr);max-width:100%;}
 }
-/* In duo mode, push action buttons into center column on mobile */
-body.duo-mode.touch-active #touchActions { right:50%; transform:translateX(50%); bottom:5px; }
-body.duo-mode.touch-active #touchActions button { width:48px; height:44px; }
-body.duo-mode.touch-active #touchActions button .icon { font-size:16px; }
-body.duo-mode.touch-active #touchActions button .label { font-size:7px; }
-
+@media (max-width:400px){
+  .home-content{grid-template-columns:1fr 2fr 1fr;gap:6px;padding:8px;}
+  .zone-icon{font-size:32px;}
+  .zone-title{font-size:16px;}
+  .zone-desc{font-size:11px;}
+  .home-currency-bubble{padding:4px 8px;font-size:11px;}
+  .bottom-bar .tab{padding:6px 8px;font-size:11px;}
+}
 </style>
 </head>
 <body>
-<div id="iceBtn">❄️</div>
-<!-- Mobile HUD (shown on touch devices) -->
+
+<!-- ===== HOME PAGE ===== -->
+<div id="page-home" class="page active">
+  <div class="top-bar" onclick="showPage('profile')">
+    <div class="profile-bubble">
+      <div class="avatar" id="home-avatar">🐾</div>
+      <div class="profile-info">
+        <div class="name-row">
+          <span class="nickname" id="home-nickname">未命名</span>
+          <span class="level-badge" id="home-level">Lv.1</span>
+        </div>
+        <div class="level-bar-wrap"><div class="level-bar" id="home-level-bar"></div></div>
+      </div>
+    </div>
+    <div class="home-currency-bubble">🔮 <span id="home-moonstones">0</span></div>
+    <div class="home-currency-bubble">🪨 <span id="home-gravel">0</span></div>
+  </div>
+
+  <div class="home-content">
+    <!-- 左 1/4: 预留 -->
+    <div class="col col-left">
+      <div style="color:#555;font-size:12px;text-align:center;">🔒 敬请期待</div>
+    </div>
+
+    <!-- 中 1/2 (合并 lc + rc) -->
+    <div class="col col-mid">
+      <div class="zone-upper" id="zone-start" onclick="onClickExplore()">
+        <div class="zone-icon">🗺️</div>
+        <div class="zone-title" id="zone-start-title">开始探索</div>
+        <div class="zone-desc" id="zone-start-desc">踏入神秘地下，搜寻月亮石 🔮</div>
+      </div>
+      <div class="zone-lower" onclick="openModal('modal-moremodes')">
+        <div class="zone-icon">🎮</div>
+        <div class="zone-title">更多模式</div>
+        <div class="zone-desc">探索不同的玩法</div>
+      </div>
+    </div>
+
+    <!-- 右 1/4: 活动 + 福利 + 热门 -->
+    <div class="col col-right">
+      <div class="top-row">
+        <div class="mini-card" onclick="openModal('modal-activities')"><span class="icon">🎊</span>活动</div>
+        <div class="mini-card" onclick="openModal('modal-welfare')"><span class="icon">🎁</span>福利</div>
+      </div>
+      <div class="hot-events">
+        <h3>🔥 热门活动</h3>
+        <div class="event-item">🎉 猫武士大冒险上线啦！</div>
+        <div class="event-item">🔮 探索10层找到月亮石</div>
+        <div class="event-item">🐾 与伙伴一起冒险</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="tab active" onclick="showPage('home')"><div class="icon">🏠</div><span>首页</span></div>
+    <div class="tab" onclick="openModal('modal-bank')"><div class="icon">🏦</div><span>银行</span></div>
+    <div class="tab" onclick="openModal('modal-shop')"><div class="icon">🛒</div><span>商店</span></div>
+    <div class="tab" onclick="openModal('modal-bag')"><div class="icon">🎒</div><span>背包</span></div>
+  </div>
+</div>
+
+<!-- ===== PROFILE PAGE ===== -->
+<div id="page-profile" class="page">
+  <div class="back-btn" onclick="showPage('home')">←</div>
+  <div class="profile-page">
+    <div class="big-avatar" id="profile-avatar" onclick="openAvatarPicker()">🐾</div>
+    <div class="name-section">
+      <div class="name-line">
+        <span class="nickname" id="profile-nickname">未命名</span>
+        <span class="edit-btn" onclick="editNickname()">📝</span>
+      </div>
+      <div class="explorer-id" id="profile-explorer-id">探索号：--------</div>
+      <div class="bio" id="profile-bio">点击设置简介</div>
+    </div>
+    <div class="level-section">
+      <div class="level-info"><span id="profile-level">Lv.1</span><span id="profile-exp">30/100</span></div>
+      <div class="level-bar-wrap"><div class="level-bar" id="profile-level-bar"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LEVEL MAP PAGE ===== -->
+<div id="page-levelmap" class="page">
+  <div class="back-btn" onclick="showPage('home')">←</div>
+  <div class="levelmap-page">
+    <div class="levelmap-header">
+      <h1>🗺️ 关卡地图</h1>
+      <p>共 10 层 · 第 5、10 层有 BOSS</p>
+    </div>
+    <div class="level-grid" id="level-grid">
+      <!-- Generated by JS -->
+    </div>
+    <div class="levelmap-actions">
+      <button class="action-btn secondary" onclick="resetProgress()">↻ 重置进度</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GAME PAGE ===== -->
+<div id="page-game" class="page">
+  <div class="game-back" onclick="confirmExitGame()">←</div>
+  <div class="game-exit" onclick="confirmExitGame()">退出</div>
+  <div id="wrap" style="display:flex;flex:1;width:100%;min-height:0;">
+    <div id="canvasWrap" style="flex:1;display:flex;align-items:center;justify-content:center;min-width:0;position:relative;">
+      <canvas id="game"></canvas>
+    </div>
+    <div id="game-sidebar">
+      <h2>🐾 猫武士大冒险</h2>
+      <div class="stat"><span class="label">Lv </span><span class="val" id="sLv">1</span> &nbsp;<span class="label">ATK </span><span class="val" id="sAtk">5</span></div>
+      <div class="stat"><span class="label">HP</span></div>
+      <div id="hpBar"><div id="hpFill" style="width:100%"></div></div>
+      <div class="stat"><span class="val" id="sHp">30/30</span></div>
+      <div class="stat"><span class="label">EXP</span></div>
+      <div id="expBar"><div id="expFill" style="width:0%"></div></div>
+      <div class="stat"><span class="val" id="sExp">0/15</span></div>
+      <div class="stat"><span class="label">🌿 </span><span class="val" id="sHerb">2</span> &nbsp;<span class="label">✦ </span><span class="val" id="sExpH">0</span></div>
+      <div class="stat"><span class="label">Floor </span><span class="val" id="sFloor">1/10</span></div>
+      <div id="msgLog"></div>
+    </div>
+  </div>
+  <div id="controls">
+    <div>
+      <div id="dpad">
+        <span></span><button onclick="doMove(0,-1)">▲</button><span></span>
+        <button onclick="doMove(-1,0)">◄</button><button onclick="doMove(0,1)">▼</button><button onclick="doMove(1,0)">►</button>
+      </div>
+      <div id="actionBtns">
+        <button onclick="doAttack()">⚔️ Attack</button>
+        <button onclick="doHeal()">🌿 Heal</button>
+        <button onclick="doShop()">🏪 Shop</button>
+        <button onclick="doExpHerb()">✦ Exp</button>
+        <button onclick="doDescend()">▼ Down</button>
+        <button onclick="confirmExitGame()">🏠 Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MOBILE HUD (game, on touch) ===== -->
 <div id="mobileHud">
   <div class="hud-row" id="hudP1Row">
-    <span class="hud-label">🐱</span>
+    <span class="hud-label">🐾</span>
     <div class="hud-hpbar"><div class="hud-hpfill" id="hudHpFill" style="width:100%"></div></div>
     <span class="hud-val" id="hudHp">30/30</span>
   </div>
@@ -178,71 +449,15 @@ body.duo-mode.touch-active #touchActions button .label { font-size:7px; }
   </div>
 </div>
 
-<!-- Mode selection overlay (shown on first load) -->
-<div id="modeOverlay">
-  <div id="modeBox">
-    <h1>🌙 Moonstone Quest</h1>
-    <button class="modeBtn" id="btnSolo" onclick="selectMode('solo')">
-      <span class="icon">🐱</span> 单人模式 (Solo)
-      <span class="sub">One cat. One quest. Press 1 or click.</span>
-    </button>
-    <button class="modeBtn" id="btnDuo" onclick="selectMode('duo')">
-      <span class="icon">🐱🐼</span> 双人模式 (Duo)
-      <span class="sub">Cat + Panda, shared turn. Press 2 or click.</span>
-    </button>
-    <div class="hint">Solo: WASD/Space. Duo: WASD+Arrows, Space/Enter attack.</div>
-  </div>
-</div>
-<a id="back" href="../index.html">← Menu</a>
-<div id="wrap">
-  <div id="canvasWrap"><canvas id="game"></canvas></div>
-  <div id="sidebar">
-    <h2>🌙 Moonstone Quest</h2>
-    <div class="stat"><span class="label">Lv </span><span class="val" id="sLv">1</span> &nbsp;<span class="label">ATK </span><span class="val" id="sAtk">5</span></div>
-    <div class="stat"><span class="label">HP</span></div>
-    <div id="hpBar"><div id="hpFill" style="width:100%"></div></div>
-    <div class="stat"><span class="val" id="sHp">30/30</span></div>
-    <div class="stat"><span class="label">EXP</span></div>
-    <div id="expBar"><div id="expFill" style="width:0%"></div></div>
-    <div class="stat"><span class="val" id="sExp">0/15</span></div>
-    <div class="stat"><span class="label">🌿 </span><span class="val" id="sHerb">2</span> &nbsp;<span class="label">✦ </span><span class="val" id="sExpH">0</span></div>
-    <div class="stat"><span class="label">Floor </span><span class="val" id="sFloor">1/10</span></div>
-    <div id="msgLog"></div>
-  </div>
-</div>
-<div id="controls">
-  <div>
-    <div id="dpad">
-      <span></span><button onclick="doMove(0,-1)">▲</button><span></span>
-      <button onclick="doMove(-1,0)">◄</button><button onclick="doMove(0,1)">▼</button><button onclick="doMove(1,0)">►</button>
-    </div>
-    <div id="actionBtns">
-      <button onclick="doAttack()">⚔️ Attack</button>
-      <button onclick="doHeal()">🌿 Heal</button>
-      <button onclick="doShop()">🏪 Shop</button>
-      <button onclick="doExpHerb()">✦ Exp</button>
-      <button onclick="doDescend()">▼ Down</button>
-      <button onclick="location.href='../index.html'">🏠 Menu</button>
-    </div>
-  </div>
-</div>
-
-<!-- Touch device: floating joystick + action buttons -->
+<!-- Touch controls (game) -->
 <div id="touchControls">
-  <div id="joystick" class="joystickP1">
-    <div id="joystick1">
-      <div id="joystickBase">
-        <div id="joystickKnob"></div>
-      </div>
-    </div>
-  </div>
-  <div id="joystick2">
-    <div id="joystickBase2">
-      <div id="joystickKnob2"></div>
+  <div id="joystick">
+    <div id="joystickBase">
+      <div id="joystickKnob"></div>
     </div>
   </div>
   <div id="touchActions">
-    <button id="btnAttack" ontouchstart="event.preventDefault();doAttack()"><span class="icon">⚔️</span><span class="label">Attack</span></button>
+    <button id="btnAttack" ontouchstart="event.preventDefault();doAttack(1)"><span class="icon">⚔️</span><span class="label">Attack</span></button>
     <button id="btnHeal" ontouchstart="event.preventDefault();doHeal()"><span class="icon">🌿</span><span class="label">Heal</span></button>
     <button id="btnExp" ontouchstart="event.preventDefault();doExpHerb()"><span class="icon">✦</span><span class="label">Exp</span></button>
     <button id="btnDown" ontouchstart="event.preventDefault();doDescend()"><span class="icon">▼</span><span class="label">Down</span></button>
@@ -252,26 +467,148 @@ body.duo-mode.touch-active #touchActions button .label { font-size:7px; }
     <button id="btnSpeed" ontouchstart="event.preventDefault();toggleSpeed()"><span class="icon">⏩</span><span class="label">Speed</span></button>
   </div>
 </div>
+
+<!-- In-game shop overlay -->
 <div id="shopOverlay">
   <div id="shopBox">
-    <button id="shopCloseBtn" onclick="closeShop()">✕</button>
-    <h2>🏪 SkyClan Shop</h2>
-    <div style="text-align:center;color:#ffcc44;margin-bottom:8px">EXP: <span id="shopExp">0</span> 💰</div>
+    <button id="shopCloseBtn" onclick="closeShop()">×</button>
+    <h2>🏪 Cave Shop</h2>
+    <div style="text-align:center;color:#888;margin-bottom:10px;font-size:13px;">EXP: <span id="shopExp">0</span></div>
     <div id="shopItems"></div>
     <div class="shopMsg" id="shopMsg"></div>
-    <div class="shopClose">Press ESC or P to close</div>
+    <div class="shopClose">Press P or Esc to close</div>
   </div>
 </div>
-<script>
-// ═══════════════════════════════════════════
-// 🌙 Moonstone Quest — HTML5 Canvas Roguelike
-// Translated from moonstone-quest.py
-// ═══════════════════════════════════════════
 
+<!-- ===== HOME MODALS ===== -->
+
+<!-- Bank Modal -->
+<div id="modal-bank" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-close" onclick="closeModal('modal-bank')">×</div>
+    <h3>🏦 月亮石银行</h3>
+    <div class="modal-body bank-content">
+      <div class="bank-intro">在月亮石与碎石之间自由转换</div>
+      <div class="bank-exchange">
+        <div class="bank-rate">🔮 月亮石 <span class="arrow">⇄</span> 🪨 碎石</div>
+        <div style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:10px;">汇率：1 🔮 ＝ 5 🪨</div>
+        <div class="bank-controls">
+          <input type="number" id="bank-amount" min="1" value="1">
+          <div class="eq" id="bank-eq">= 5 🪨</div>
+        </div>
+        <div class="bank-preview" id="bank-preview"></div>
+        <div class="bank-btns">
+          <button onclick="bankDecompose()">分解 🔮→🪨</button>
+          <button onclick="bankCompose()">合成 🪨→🔮</button>
+        </div>
+        <div class="bank-balance">余额：🔮 <span id="bank-bal-moon">0</span> · 🪨 <span id="bank-bal-rock">0</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Shop Modal -->
+<div id="modal-shop" class="modal-overlay">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-close" onclick="closeModal('modal-shop')">×</div>
+    <h3>🛒 商店</h3>
+    <div class="cat-content">
+      <div class="cat-sidebar" id="shop-cats"></div>
+      <div class="cat-main" id="shop-items"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bag Modal -->
+<div id="modal-bag" class="modal-overlay">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-close" onclick="closeModal('modal-bag')">×</div>
+    <h3>🎒 背包</h3>
+    <div class="cat-content">
+      <div class="cat-sidebar" id="bag-cats"></div>
+      <div class="cat-main" id="bag-items"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Activities Modal -->
+<div id="modal-activities" class="modal-overlay">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-close" onclick="closeModal('modal-activities')">×</div>
+    <h3>🎊 活动</h3>
+    <div class="cat-content">
+      <div class="cat-sidebar" id="act-cats"></div>
+      <div class="cat-main" id="act-items"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Welfare Modal -->
+<div id="modal-welfare" class="modal-overlay">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-close" onclick="closeModal('modal-welfare')">×</div>
+    <h3>🎁 福利</h3>
+    <div class="cat-content">
+      <div class="cat-sidebar" id="wel-cats"></div>
+      <div class="cat-main" id="wel-items"></div>
+    </div>
+  </div>
+</div>
+
+<!-- More Modes Modal -->
+<div id="modal-moremodes" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-close" onclick="closeModal('modal-moremodes')">×</div>
+    <h3>🎮 更多模式</h3>
+    <div class="modal-body moremodes-content" id="moremodes-list">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Avatar Picker Modal -->
+<div id="modal-avatar" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-close" onclick="closeModal('modal-avatar')">×</div>
+    <h3>🐾 选择头像</h3>
+    <div class="modal-body">
+      <div class="avatar-picker" id="avatar-picker"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div id="modal-confirm" class="modal-overlay">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-body confirm-dialog">
+      <div class="confirm-text" id="confirm-text">确定吗？</div>
+      <div class="confirm-btns">
+        <button class="btn-yes" id="confirm-yes">确定</button>
+        <button class="btn-no" onclick="closeConfirm()">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Floating Ice button -->
+<div id="iceBtn">❄️</div>
+
+<script>
+// ============================================================
+// 🐾 猫武士大冒险 (Moonstone Quest)
+// ============================================================
+
+// ===== CONSTANTS =====
 const MAP_W=40, MAP_H=20, FOV_RAD=5, MAX_FLOOR=10, TILE=28;
 const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
 
-// ─── Enemy data ───
+// ===== AVATAR OPTIONS =====
+const AVATAR_OPTIONS=['🐾','🐱','🐼','🦊','🐯','🐻','🦁','🐺','🐨','🐰','🦝','🐹','🦄','🐲','🐉','🦅','🦉','🐸','🐢','🐍'];
+
+// ===== ENEMY DATA =====
 const EDATA={
   rat:{ch:'🐭',col:'#999999',hp:8,atk:2,exp:5,name:'Rat'},
   badger:{ch:'🐻',col:'#cc4444',hp:18,atk:5,exp:12,name:'Badger'},
@@ -287,16 +624,21 @@ const EDATA={
   rogue:{ch:'😼',col:'#4466dd',hp:24,atk:8,exp:20,name:'Rogue'},
   badger_lord:{ch:'🐺',col:'#ff4444',hp:45,atk:12,exp:35,name:'Wolf'},
   tigerstar_spirit:{ch:'👻',col:'#dd44ff',hp:60,atk:15,exp:50,name:'Tigerstar Spirit'},
+  // Boss variants
+  tigerstar_boss:{ch:'👑',col:'#ff44aa',hp:120,atk:22,exp:80,name:'Tigerstar Boss'},
+  shadow_boss:{ch:'🌑',col:'#7700ff',hp:200,atk:28,exp:120,name:'Moonstone Guardian'},
 };
 const FLOOR_ENEMIES={
   1:['rat','rat'],2:['rat','rat','spider'],3:['rat','badger','fox'],
-  4:['badger','fox','snake','owl'],5:['fox','snake','shadow_cat','adder'],
+  4:['badger','fox','snake','owl'],5:['fox','snake','shadow_cat','adder','tigerstar_boss'],
   6:['snake','shadow_cat','dark_warrior','rogue'],
   7:['shadow_cat','dark_warrior','dog','rogue'],
   8:['dark_warrior','dog','rogue','twoleg_trap','badger_lord'],
   9:['dog','rogue','badger_lord','tigerstar_spirit'],
-  10:['badger_lord','tigerstar_spirit','dark_warrior','rogue','dog'],
+  10:['badger_lord','tigerstar_spirit','dark_warrior','rogue','dog','shadow_boss'],
 };
+
+// ===== IN-GAME SHOP (uses EXP, unchanged) =====
 const SHOP=[
   {key:'1',name:'Healing Herb',icon:'🌿',desc:'Restore 15 HP',cost:8,type:'heal_herb'},
   {key:'2',name:'Exp Herb',icon:'✦',desc:'+10 EXP',cost:12,type:'exp_herb'},
@@ -306,6 +648,445 @@ const SHOP=[
   {key:'6',name:'Eagle Eyes',icon:'👁',desc:'FOV +1 permanently',cost:30,type:'fov_up'},
   {key:'7',name:'Swift Paws',icon:'💨',desc:'Stun all enemies 1 turn',cost:15,type:'stun'},
 ];
+
+// ============================================================
+// 📦 DATA TO FILL (ThawPaw 亲自添加)
+// ============================================================
+// 格式：每个数组里的对象都有 category 字段；category 用于左侧分类栏
+// category 不要重复，会自动归类
+
+// === Home 商店商品 (用 🔮 月亮石购买) ===
+const SHOP_ITEMS = [
+  // { category: '道具', name: '示例道具', icon: '🗡️', desc: '描述', price: 10, currency: '🔮' },
+];
+
+// === Home 活动 ===
+const ACTIVITIES = [
+  // { category: '日常', name: '示例活动', icon: '🎯', desc: '描述', reward: '🔮 x10' },
+];
+
+// === Home 福利 ===
+const WELFARE = [
+  // { category: '新手', name: '示例福利', icon: '🎁', desc: '描述', reward: '🔮 x5' },
+];
+
+// === Home 背包物品 ===
+const BAG_ITEMS = [
+  // { category: '材料', name: '示例物品', icon: '🧪', desc: '描述', count: 1 },
+];
+
+// ===== HOME CURRENCIES (持久化) =====
+let homeData = { moonstones: 0, gravel: 0 };
+
+// ===== PROFILE (持久化) =====
+let profile = {
+  nickname: '未命名',
+  avatar: '🐾',
+  bio: '点击设置简介',
+  explorerId: generateExplorerId(),
+};
+function generateExplorerId(){
+  // 8-char random alphanumeric
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let id='';
+  for(let i=0;i<8;i++) id+=chars[Math.floor(Math.random()*chars.length)];
+  return id;
+}
+
+// ===== MODE =====
+let mode='solo'; // 'solo' or 'duo'
+
+// ===== GAME STATE =====
+let G={
+  state:'home', // home, levelmap, playing, shop, dead, won, title
+  floor:1,
+  maxFloorReached:1,
+  grid:null, rooms:null, stairsPos:null,
+  seen:null,
+  enemies:[], items:[],
+  shared:{hp:30,maxHp:30,atk:5,exp:0,level:1,herbs:2,expHerbs:0,kills:0,fovBonus:0},
+  p1:{x:0,y:0,hp:30,maxHp:30,alive:true},
+  p2:{x:0,y:0,hp:30,maxHp:30,alive:true},
+  p1Acted:false, p2Acted:false,
+  messages:[],
+  shopMsg:'',
+  totalSpent:0,
+  turnCount:0,
+};
+
+function syncPlayerAlias(){G.player=G.shared;}
+syncPlayerAlias();
+function fovRadius(){return FOV_RAD+G.shared.fovBonus;}
+function expToNext(){return G.shared.level*15;}
+function isSolo(){return mode==='solo';}
+function isDuo(){return mode==='duo';}
+function getPlayer(idx){return idx===1?G.p1:G.p2;}
+function getAlivePlayers(){
+  const out=[];
+  if(isSolo()){if(G.p1.alive)out.push(1);return out;}
+  if(G.p1.alive)out.push(1);
+  if(G.p2.alive)out.push(2);
+  return out;
+}
+function addMsg(txt,cls){
+  G.messages.push({txt,cls:cls||''});
+  if(G.messages.length>50)G.messages=G.messages.slice(-50);
+}
+
+// ============================================================
+// 🔄 PAGE & MODAL MANAGEMENT
+// ============================================================
+function showPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const el=document.getElementById('page-'+page);
+  if(el) el.classList.add('active');
+  if(page==='game') G.state='playing';
+  else if(page==='levelmap'){G.state='levelmap';renderLevelMap();}
+  else if(page==='home'){G.state='home';refreshHomeUI();}
+  else if(page==='profile'){G.state='home';refreshProfileUI();}
+}
+function openModal(id){
+  const m=document.getElementById(id);
+  if(m) m.classList.add('active');
+  // Populate content as needed
+  if(id==='modal-bank') refreshBankUI();
+  if(id==='modal-shop') renderCatPage('shop');
+  if(id==='modal-bag') renderCatPage('bag');
+  if(id==='modal-activities') renderCatPage('activities');
+  if(id==='modal-welfare') renderCatPage('welfare');
+  if(id==='modal-moremodes') renderMoreModes();
+  if(id==='modal-avatar') renderAvatarPicker();
+}
+function closeModal(id){
+  const m=document.getElementById(id);
+  if(m) m.classList.remove('active');
+}
+function showConfirm(text, onYes){
+  document.getElementById('confirm-text').textContent=text;
+  const yesBtn=document.getElementById('confirm-yes');
+  yesBtn.onclick=()=>{closeConfirm();onYes();};
+  document.getElementById('modal-confirm').classList.add('active');
+}
+function closeConfirm(){
+  document.getElementById('modal-confirm').classList.remove('active');
+}
+let toastTimer=null;
+function showToast(msg,ms=1500){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),ms);
+}
+
+// ============================================================
+// 🏠 HOME UI
+// ============================================================
+function refreshHomeUI(){
+  document.getElementById('home-avatar').textContent=profile.avatar;
+  document.getElementById('home-nickname').textContent=profile.nickname;
+  document.getElementById('home-level').textContent='Lv.'+G.shared.level;
+  document.getElementById('home-level-bar').style.width=Math.min(100,(G.shared.exp/expToNext()*100))+'%';
+  document.getElementById('home-moonstones').textContent=homeData.moonstones;
+  document.getElementById('home-gravel').textContent=homeData.gravel;
+  // Update start/continue button
+  const hasSave = !!localStorage.getItem('moonstone_save');
+  document.getElementById('zone-start-title').textContent = hasSave ? '继续探索' : '开始探索';
+  document.getElementById('zone-start-desc').textContent = hasSave ? `当前进度：第 ${G.maxFloorReached} / ${MAX_FLOOR} 层` : '踏入神秘地下，搜寻月亮石 🔮';
+}
+function refreshProfileUI(){
+  document.getElementById('profile-avatar').textContent=profile.avatar;
+  document.getElementById('profile-nickname').textContent=profile.nickname;
+  document.getElementById('profile-explorer-id').textContent='探索号：'+profile.explorerId;
+  document.getElementById('profile-bio').textContent=profile.bio;
+  document.getElementById('profile-level').textContent='Lv.'+G.shared.level;
+  document.getElementById('profile-exp').textContent=G.shared.exp+'/'+expToNext();
+  document.getElementById('profile-level-bar').style.width=Math.min(100,(G.shared.exp/expToNext()*100))+'%';
+}
+function onClickExplore(){
+  // Start or continue game → go to level map
+  showPage('levelmap');
+}
+
+// ============================================================
+// 🗺️ LEVEL MAP
+// ============================================================
+function renderLevelMap(){
+  const grid=document.getElementById('level-grid');
+  grid.innerHTML='';
+  for(let i=1;i<=MAX_FLOOR;i++){
+    const isBoss = (i===5 || i===10);
+    const unlocked = i<=G.maxFloorReached;
+    const current = i===G.floor;
+    const card=document.createElement('div');
+    card.className='level-card'+(isBoss?' boss':'')+(current?' current':'')+(unlocked?'':' locked');
+    card.innerHTML=`
+      <div class="lvl-icon">${isBoss?'💀':(current?'📍':'🌲')}</div>
+      <div class="lvl-num">${i}</div>
+      <div class="lvl-status">${isBoss?'BOSS':(unlocked?(current?'当前':'解锁'):'🔒')}</div>
+    `;
+    if(unlocked){
+      card.onclick=()=>enterFloor(i);
+    }
+    grid.appendChild(card);
+  }
+}
+function enterFloor(n){
+  G.floor=n;
+  if(n>G.maxFloorReached) G.maxFloorReached=n;
+  newGame(); // start a fresh run on this floor
+  saveGame();
+  showPage('game');
+}
+function resetProgress(){
+  showConfirm('确定要重置进度吗？\n将清除当前存档与关卡进度。',()=>{
+    try{localStorage.removeItem('moonstone_save');}catch(e){}
+    G.floor=1; G.maxFloorReached=1;
+    G.shared={hp:30,maxHp:30,atk:5,exp:0,level:1,herbs:2,expHerbs:0,kills:0,fovBonus:0};
+    G.p1={x:0,y:0,hp:30,maxHp:30,alive:true};
+    G.p2={x:0,y:0,hp:30,maxHp:30,alive:true};
+    showToast('进度已重置 ✨');
+    renderLevelMap();
+    refreshHomeUI();
+  });
+}
+
+// ============================================================
+// 🏦 BANK
+// ============================================================
+function refreshBankUI(){
+  document.getElementById('bank-bal-moon').textContent=homeData.moonstones;
+  document.getElementById('bank-bal-rock').textContent=homeData.gravel;
+  updateBankPreview();
+}
+function updateBankPreview(){
+  const amt=Math.max(1,parseInt(document.getElementById('bank-amount').value)||1);
+  document.getElementById('bank-eq').textContent='= '+(amt*5)+' 🪨';
+}
+document.addEventListener('input',e=>{
+  if(e.target.id==='bank-amount') updateBankPreview();
+});
+function bankDecompose(){
+  const amt=Math.max(1,parseInt(document.getElementById('bank-amount').value)||1);
+  if(homeData.moonstones<amt){showToast('🔮 月亮石不够！');return;}
+  homeData.moonstones-=amt;
+  homeData.gravel+=amt*5;
+  saveHome();
+  refreshBankUI();
+  refreshHomeUI();
+  showToast('✅ 分解成功：-1 🔮 → +5 🪨');
+}
+function bankCompose(){
+  const amt=Math.max(1,parseInt(document.getElementById('bank-amount').value)||1);
+  const cost=amt*5;
+  if(homeData.gravel<cost){showToast('🪨 碎石不够！需要 '+cost);return;}
+  homeData.gravel-=cost;
+  homeData.moonstones+=amt;
+  saveHome();
+  refreshBankUI();
+  refreshHomeUI();
+  showToast('✅ 合成成功：-'+cost+' 🪨 → +'+amt+' 🔮');
+}
+
+// ============================================================
+// 🛒 CATEGORY PAGES (Shop / Bag / Activities / Welfare)
+// ============================================================
+// Generic renderer: takes a config {cats, items, containerId, onClick}
+// items: array of {category, name, icon, desc, ...}
+function renderCatPage(which){
+  let dataArr, catsEl, itemsEl, withCount;
+  if(which==='shop'){dataArr=SHOP_ITEMS;catsEl='shop-cats';itemsEl='shop-items';withCount=false;}
+  else if(which==='bag'){dataArr=BAG_ITEMS;catsEl='bag-cats';itemsEl='bag-items';withCount=true;}
+  else if(which==='activities'){dataArr=ACTIVITIES;catsEl='act-cats';itemsEl='act-items';withCount=false;}
+  else if(which==='welfare'){dataArr=WELFARE;catsEl='wel-cats';itemsEl='wel-items';withCount=false;}
+  else return;
+
+  // Derive categories
+  const cats=[];
+  dataArr.forEach(it=>{if(it.category && !cats.includes(it.category)) cats.push(it.category);});
+  if(cats.length===0) cats.push('全部');
+
+  // Render categories sidebar
+  const cs=document.getElementById(catsEl);
+  cs.innerHTML='';
+  cats.forEach((c,i)=>{
+    const el=document.createElement('div');
+    el.className='cat'+(i===0?' active':'');
+    el.textContent=c;
+    el.onclick=()=>{
+      cs.querySelectorAll('.cat').forEach(x=>x.classList.remove('active'));
+      el.classList.add('active');
+      renderCatItems(which,c);
+    };
+    cs.appendChild(el);
+  });
+
+  renderCatItems(which, cats[0]);
+}
+function renderCatItems(which, cat){
+  let dataArr, itemsEl;
+  if(which==='shop'){dataArr=SHOP_ITEMS;itemsEl='shop-items';}
+  else if(which==='bag'){dataArr=BAG_ITEMS;itemsEl='bag-items';}
+  else if(which==='activities'){dataArr=ACTIVITIES;itemsEl='act-items';}
+  else if(which==='welfare'){dataArr=WELFARE;itemsEl='wel-items';}
+  else return;
+
+  const filtered=dataArr.filter(it=>!cat || cat==='全部' || it.category===cat);
+  const cont=document.getElementById(itemsEl);
+  cont.innerHTML='';
+  if(filtered.length===0){
+    cont.innerHTML='<div class="cat-empty">📭 还没有内容<br><small>等待 ThawPaw 添加</small></div>';
+    return;
+  }
+  filtered.forEach(it=>{
+    const el=document.createElement('div');
+    el.className='cat-item';
+    let priceLine='';
+    if(it.price!=null) priceLine=`<div class="item-price">${it.currency||'🔮'} ${it.price}</div>`;
+    else if(it.reward) priceLine=`<div class="item-price">${it.reward}</div>`;
+    else if(it.count!=null) priceLine=`<div class="item-price">x${it.count}</div>`;
+    el.innerHTML=`
+      <div class="item-icon">${it.icon||'📦'}</div>
+      <div class="item-name">${it.name||'?'}</div>
+      <div class="item-desc">${it.desc||''}</div>
+      ${priceLine}
+    `;
+    cont.appendChild(el);
+  });
+}
+
+// ============================================================
+// 🎮 MORE MODES
+// ============================================================
+function renderMoreModes(){
+  const list=document.getElementById('moremodes-list');
+  list.innerHTML='';
+  const modes=[
+    {key:'solo', icon:'🐾', name:'单人模式', desc:'独自探索 10 层地下城，寻找月亮石。'},
+    {key:'duo', icon:'🐾🐼', name:'双人模式', desc:'和伙伴一起冒险，轮流行动，共享资源。'},
+  ];
+  modes.forEach(m=>{
+    const el=document.createElement('div');
+    el.className='moremodes-item'+(mode===m.key?' active':'');
+    el.innerHTML=`
+      <div class="mm-icon">${m.icon}</div>
+      <div class="mm-name">${m.name}${mode===m.key?' ✓':''}</div>
+      <div class="mm-desc">${m.desc}</div>
+    `;
+    el.onclick=()=>{
+      if(mode===m.key){
+        // already selected — just close
+        closeModal('modal-moremodes');
+        return;
+      }
+      showConfirm('切换模式会清除当前游戏存档，确定吗？',()=>{
+        mode=m.key;
+        saveMode();
+        document.body.classList.toggle('duo-mode',isDuo());
+        try{localStorage.removeItem('moonstone_save');}catch(e){}
+        G.floor=1;G.maxFloorReached=1;
+        G.shared={hp:30,maxHp:30,atk:5,exp:0,level:1,herbs:2,expHerbs:0,kills:0,fovBonus:0};
+        closeModal('modal-moremodes');
+        showToast('已切换到 '+m.name);
+        refreshHomeUI();
+      });
+    };
+    list.appendChild(el);
+  });
+}
+
+// ============================================================
+// 🐾 AVATAR PICKER
+// ============================================================
+function renderAvatarPicker(){
+  const el=document.getElementById('avatar-picker');
+  el.innerHTML='';
+  AVATAR_OPTIONS.forEach(a=>{
+    const opt=document.createElement('div');
+    opt.className='avatar-option'+(profile.avatar===a?' selected':'');
+    opt.textContent=a;
+    opt.onclick=()=>{
+      profile.avatar=a;
+      saveProfile();
+      refreshProfileUI();
+      refreshHomeUI();
+      closeModal('modal-avatar');
+    };
+    el.appendChild(opt);
+  });
+}
+function openAvatarPicker(){openModal('modal-avatar');}
+function editNickname(){
+  const n=prompt('给自己起个名字吧：',profile.nickname);
+  if(n && n.trim()){
+    profile.nickname=n.trim().slice(0,12);
+    saveProfile();
+    refreshProfileUI();
+    refreshHomeUI();
+  }
+}
+
+// ============================================================
+// 💾 PERSISTENCE
+// ============================================================
+function saveHome(){try{localStorage.setItem('moonstone_home',JSON.stringify(homeData));}catch(e){}}
+function loadHome(){try{const d=localStorage.getItem('moonstone_home');if(d){const o=JSON.parse(d);homeData.moonstones=o.moonstones||0;homeData.gravel=o.gravel||0;}}catch(e){}}
+function saveProfile(){try{localStorage.setItem('moonstone_profile',JSON.stringify(profile));}catch(e){}}
+function loadProfile(){
+  try{
+    const d=localStorage.getItem('moonstone_profile');
+    if(d){const o=JSON.parse(d);profile=Object.assign(profile,o);}
+  }catch(e){}
+}
+function saveMode(){try{localStorage.setItem('moonstone_mode',mode);}catch(e){}}
+function loadMode(){
+  try{
+    const m=localStorage.getItem('moonstone_mode');
+    if(m==='solo'||m==='duo') mode=m;
+  }catch(e){}
+}
+function saveGame(){
+  try{
+    const d=JSON.stringify({
+      floor:G.floor, maxFloorReached:G.maxFloorReached,
+      shared:G.shared,p1:G.p1,p2:G.p2,
+      p1Acted:G.p1Acted,p2Acted:G.p2Acted,
+      messages:G.messages.slice(-20),
+      state:G.state,totalSpent:G.totalSpent,
+      grid:G.grid,rooms:G.rooms,stairsPos:G.stairsPos,
+      enemies:G.enemies,items:G.items,seen:G.seen,
+      player:G.shared, mode:mode,
+    });
+    localStorage.setItem('moonstone_save',d);
+  }catch(e){}
+}
+function loadGame(){
+  try{
+    const d=localStorage.getItem('moonstone_save');
+    if(!d)return false;
+    const s=JSON.parse(d);
+    G.floor=s.floor||1;
+    G.maxFloorReached=s.maxFloorReached||G.floor;
+    G.shared=s.shared||s.player||{hp:30,maxHp:30,atk:5,exp:0,level:1,herbs:2,expHerbs:0,kills:0,fovBonus:0};
+    G.p1=s.p1||{x:0,y:0,hp:G.shared.maxHp,maxHp:G.shared.maxHp,alive:true};
+    G.p2=s.p2||{x:G.p1.x,y:G.p1.y,hp:G.shared.maxHp,maxHp:G.shared.maxHp,alive:true};
+    G.p1Acted=!!s.p1Acted;G.p2Acted=!!s.p2Acted;
+    G.messages=s.messages||[];
+    G.state=s.state||'playing';
+    G.totalSpent=s.totalSpent||0;
+    G.grid=s.grid;G.rooms=s.rooms;G.stairsPos=s.stairsPos;
+    G.enemies=s.enemies||[];G.items=s.items||[];G.seen=s.seen||[];
+    G.shopMsg='';
+    if(s.mode==='solo'||s.mode==='duo'){mode=s.mode;saveMode();}
+    syncPlayerAlias();
+    document.body.classList.toggle('duo-mode',isDuo());
+    return true;
+  }catch(e){return false;}
+}
+
+// ============================================================
+// 🎮 GAME LOGIC (preserved from original moonstone-quest)
+// ============================================================
 
 // ─── Audio ───
 let audioCtx=null;
@@ -362,60 +1143,7 @@ let shakeTime=0, flashColor=null, flashTime=0;
 function triggerShake(dur){shakeTime=dur;}
 function triggerFlash(col,dur){flashColor=col;flashTime=dur;}
 
-// ─── Game State ───
-let mode='solo'; // 'solo' or 'duo' (persisted via localStorage)
-let G={
-  state:'modeSelect', // modeSelect, title, playing, shop, dead, won
-  floor:1,
-  grid:null, rooms:null, stairsPos:null,
-  seen:null,
-  enemies:[], items:[],
-  // Shared (team) stats — used in duo mode and in solo (as G.player alias)
-  shared:{hp:30,maxHp:30,atk:5,exp:0,level:1,herbs:2,expHerbs:0,kills:0,fovBonus:0},
-  // Per-player state (position + hp/maxHp). Atk/exp/etc. are shared.
-  p1:{x:0,y:0,hp:30,maxHp:30,alive:true},
-  p2:{x:0,y:0,hp:30,maxHp:30,alive:true},
-  // Action flags for shared turn system (duo)
-  p1Acted:false, p2Acted:false,
-  messages:[],
-  shopMsg:'',
-  totalSpent:0,
-  turnCount:0,
-};
-// In solo mode, G.player aliases the shared stats. In duo, G.player is unused in game logic
-// but kept as alias of shared for shop/HUD compatibility.
-function syncPlayerAlias(){
-  if(mode==='solo') G.player=G.shared; else G.player=G.shared;
-}
-syncPlayerAlias();
-function fovRadius(){return FOV_RAD+G.shared.fovBonus;}
-function expToNext(){return G.shared.level*15;}
-// Helpers
-function isSolo(){return mode==='solo';}
-function isDuo(){return mode==='duo';}
-function getPlayer(idx){return idx===1?G.p1:G.p2;}
-function getAlivePlayers(){
-  const out=[];
-  if(isSolo()){if(G.p1.alive)out.push(1);return out;}
-  if(G.p1.alive)out.push(1);
-  if(G.p2.alive)out.push(2);
-  return out;
-}
-function allPlayersDead(){
-  if(isSolo()) return !G.p1.alive;
-  return !G.p1.alive && !G.p2.alive;
-}
-function allPlayersGhostOrDead(){
-  if(isSolo()) return !G.p1.alive;
-  return !G.p1.alive && !G.p2.alive;
-}
-
-function addMsg(txt,cls){
-  G.messages.push({txt,cls:cls||''});
-  if(G.messages.length>50)G.messages=G.messages.slice(-50);
-}
-
-// ─── Map Generation (from Python) ───
+// ─── Map Generation ───
 function generateMap(floorNum){
   const grid=[];
   for(let y=0;y<MAP_H;y++){grid[y]=[];for(let x=0;x<MAP_W;x++)grid[y][x]='#';}
@@ -434,7 +1162,6 @@ function generateMap(floorNum){
     for(let cy=ry;cy<ry+h;cy++)for(let cx=rx;cx<rx+w;cx++)grid[cy][cx]='.';
     rooms.push({x:rx,y:ry,w,h});
   }
-  // corridors
   for(let i=0;i<rooms.length-1;i++){
     const x1=rooms[i].x+Math.floor(rooms[i].w/2);
     const y1=rooms[i].y+Math.floor(rooms[i].h/2);
@@ -450,14 +1177,12 @@ function generateMap(floorNum){
   }
   return {grid,rooms};
 }
-
 function placeStairs(grid,rooms,floorNum){
   const r=rooms[rooms.length-1];
   const sx=r.x+Math.floor(r.w/2), sy=r.y+Math.floor(r.h/2);
   grid[sy][sx]=floorNum===MAX_FLOOR?'M':'>';
   return {x:sx,y:sy};
 }
-
 function placeEnemies(grid,rooms,floorNum){
   const types=FLOOR_ENEMIES[floorNum]||['tigerstar_spirit','badger_lord'];
   const count=3+floorNum*2;
@@ -474,7 +1199,6 @@ function placeEnemies(grid,rooms,floorNum){
   }
   return enemies;
 }
-
 function placeItems(grid,rooms,floorNum){
   const items=[];
   const count=3+floorNum;
@@ -489,9 +1213,7 @@ function placeItems(grid,rooms,floorNum){
   }
   return items;
 }
-
 function updateFov(){
-  // FOV is centered on P1 (the "camera" cat). In duo, union with P2's FOV.
   const rad=fovRadius();
   for(let y=0;y<MAP_H;y++){
     for(let x=0;x<MAP_W;x++){
@@ -504,15 +1226,12 @@ function updateFov(){
     }
   }
 }
-
 function visible(x,y){
-  // Visible if within FOV of P1 (or P2 in duo)
   const rad=fovRadius();
   if(Math.abs(x-G.p1.x)+Math.abs(y-G.p1.y)<=rad) return true;
   if(isDuo() && G.p2.alive && Math.abs(x-G.p2.x)+Math.abs(y-G.p2.y)<=rad) return true;
   return false;
 }
-
 function enemyAt(x,y){return G.enemies.find(e=>e.x===x&&e.y===y)||null;}
 function itemAt(x,y){return G.items.find(i=>i.x===x&&i.y===y)||null;}
 
@@ -522,13 +1241,10 @@ function generateFloor(){
   G.grid=res.grid; G.rooms=res.rooms;
   G.stairsPos=placeStairs(G.grid,G.rooms,G.floor);
   const r=G.rooms[0];
-  // Place P1 in the middle of the first room
   G.p1.x=r.x+Math.floor(r.w/2);
   G.p1.y=r.y+Math.floor(r.h/2);
-  // Place P2 in the same room, adjacent if duo. In solo, ghost/spectator.
-  G.p2.x=G.p1.x; G.p2.y=G.p1.y; // start overlapped (harmless); generator will move P2
+  G.p2.x=G.p1.x; G.p2.y=G.p1.y;
   if(isDuo()){
-    // Find an adjacent free tile for P2
     const tries=[[1,0],[-1,0],[0,1],[0,-1]];
     for(const[dx,dy]of tries){
       const nx=G.p1.x+dx, ny=G.p1.y+dy;
@@ -550,18 +1266,12 @@ function generateFloor(){
 
 // ─── New game ───
 function revivePlayer(){
-  // Solo: revive self. Duo: revive a dead partner.
   if(isDuo()){
-    // Determine which player is dead; survivor revives them at survivor's position
     let dead=null,survivor=null,idx=0;
     if(!G.p1.alive && G.p2.alive){dead=G.p1;survivor=G.p2;idx=1;}
     else if(!G.p2.alive && G.p1.alive){dead=G.p2;survivor=G.p1;idx=2;}
-    else if(!G.p1.alive && !G.p2.alive){
-      // Both dead — game over
-      return;
-    }else{
-      addMsg('No one needs reviving!','info');return;
-    }
+    else if(!G.p1.alive && !G.p2.alive){return;}
+    else{addMsg('No one needs reviving!','info');return;}
     if(G.shared.herbs<5){addMsg('Need 5 herbs to revive your partner! You have '+G.shared.herbs+'.','hurt');return;}
     G.shared.herbs-=5;
     dead.alive=true;dead.hp=dead.maxHp;
@@ -572,7 +1282,6 @@ function revivePlayer(){
     for(var i=0;i<G.enemies.length;i++) G.enemies[i].stunned=true;
     return;
   }
-  // Solo
   var p=G.shared;
   if(p.herbs<5){addMsg('Need 5 herbs to revive! You have '+p.herbs+'.','hurt');return;}
   p.herbs-=5;
@@ -584,9 +1293,8 @@ function revivePlayer(){
   spawnParticles(G.p1.x,G.p1.y,'#ffcc44',20);
   for(var i=0;i<G.enemies.length;i++) G.enemies[i].stunned=true;
 }
-
 function newGame(){
-  G.state='playing'; G.floor=1;
+  G.state='playing'; G.floor=G.floor||1;
   G.shared={hp:30,maxHp:30,atk:5,exp:0,level:1,herbs:2,expHerbs:0,kills:0,fovBonus:0};
   G.p1={x:0,y:0,hp:30,maxHp:30,alive:true};
   G.p2={x:0,y:0,hp:30,maxHp:30,alive:true};
@@ -595,8 +1303,8 @@ function newGame(){
   G.messages=[];G.totalSpent=0;G.turnCount=0;
   G.shopMsg='';
   particles=[];
-  if(isDuo()) addMsg('🐱🐼 Two cats descend together, seeking the Moonstone...','info');
-  else addMsg('🌙 You descend into the caves seeking the Moonstone...','info');
+  if(isDuo()) addMsg('🐾🐼 Two cats descend together, seeking the Moonstone...','info');
+  else addMsg('🐾 You descend into the caves seeking the Moonstone...','info');
   addMsg('   May StarClan light your path, apprentice!','info');
   addMsg('   💡 Press P anytime to open the Shop!','info');
   generateFloor();
@@ -610,7 +1318,6 @@ function gainExp(amount){
   while(p.exp>=expToNext()){
     p.exp-=expToNext();
     p.level++;p.maxHp+=5;
-    // Bump HP for both players and heal a bit
     G.p1.maxHp=G.shared.maxHp;G.p2.maxHp=G.shared.maxHp;
     G.p1.hp=Math.min(G.p1.hp+10,G.p1.maxHp);
     if(G.p2.alive) G.p2.hp=Math.min(G.p2.hp+10,G.p2.maxHp);
@@ -619,38 +1326,30 @@ function gainExp(amount){
   }
   return leveled;
 }
-
 function spendExp(amount){
   if(G.shared.exp>=amount){G.shared.exp-=amount;return true;}
   return false;
 }
 
 // ─── Player actions ───
-// Move a specific player (or in solo, the only player). who=1 or 2
 function movePlayer(dx,dy,who){
   if(G.state!=='playing')return;
   initAudio();
   who=who||1;
-  // In solo, ignore who=2
   if(isSolo()) who=1;
   const p=getPlayer(who);
-  if(!p.alive){/* ghost can't move */}
-  const nx=p.x+dx, ny=p.y+dy;
-  // Ghost: cannot move or attack, but can still have items pass through? Keep simple: ghost cannot move.
   if(!p.alive){
     addMsg(`💀 P${who} is a ghost and cannot move.`,'hurt');
     return;
   }
+  const nx=p.x+dx, ny=p.y+dy;
   if(nx<0||nx>=MAP_W||ny<0||ny>=MAP_H||G.grid[ny][nx]==='#'){
-    // blocked move still counts as an action? No — counts only if actual move happens
     return;
   }
-  if(enemyAt(nx,ny))return; // bump-attack happens via attackAdjacent
-  // Block if other player occupies (don't allow overlap in duo)
+  if(enemyAt(nx,ny))return;
   const other=who===1?G.p2:G.p1;
   if(isDuo() && other.alive && other.x===nx && other.y===ny) return;
   p.x=nx; p.y=ny;
-  // item pickup
   const it=itemAt(nx,ny);
   if(it){
     G.items=G.items.filter(i=>i!==it);
@@ -659,6 +1358,9 @@ function movePlayer(dx,dy,who){
       G.shared.herbs++;
       addMsg(`♥ P${who} found a healing herb! (🌿${G.shared.herbs} total)`,'good');
       spawnParticles(nx,ny,'#44cc44',6);
+      // Home gravel reward
+      homeData.gravel+=1;
+      saveHome();
     }else if(it.type==='exp_herb'){
       G.shared.expHerbs++;
       addMsg(`✦ P${who} found an experience herb! (${G.shared.expHerbs} total)`,'good');
@@ -675,10 +1377,13 @@ function movePlayer(dx,dy,who){
     G.state='won';
     addMsg(`◆◆◆ P${who} found the MOONSTONE! StarClan honors you! ◆◆◆`,'gold');
     sfxVictory();
+    // Award moonstones
+    homeData.moonstones+=30;
+    saveHome();
+    showToast('🎉 胜利！+30 🔮 月亮石');
     return;
   }
   updateFov();
-  // Mark action and trigger shared enemy turn when both have acted
   if(who===1) G.p1Acted=true; else G.p2Acted=true;
   if(isSolo()){
     enemyTurn();
@@ -687,11 +1392,10 @@ function movePlayer(dx,dy,who){
       G.p1Acted=false;G.p2Acted=false;
       enemyTurn();
     }else{
-      addMsg(who===1?'🐱 Waiting for 🐼...':'🐼 Waiting for 🐱...','info');
+      addMsg(who===1?'🐾 Waiting for 🐼...':'🐼 Waiting for 🐾...','info');
     }
   }
 }
-
 function attackAdjacent(who){
   if(G.state!=='playing')return;
   initAudio();
@@ -715,6 +1419,15 @@ function attackAdjacent(who){
         G.enemies=G.enemies.filter(en=>en!==e);
         G.shared.kills++;
         const leveled=gainExp(e.exp);
+        // Award gravel for kills (boss kills = moonstones)
+        const isBoss=e.type.includes('boss')||e.type==='tigerstar_spirit';
+        if(isBoss){
+          homeData.moonstones+=e.exp/2|0;
+          addMsg(`💀 Boss defeated! +${e.exp} EXP, +${(e.exp/2|0)} 🔮`,'gold');
+        }else{
+          homeData.gravel+=1;
+        }
+        saveHome();
         addMsg(`💀 ${e.type.replace(/_/g,' ')} defeated! +${e.exp} EXP`,'good');
         spawnParticles(e.x,e.y,EDATA[e.type].col,8);
         if(leveled){
@@ -723,7 +1436,6 @@ function attackAdjacent(who){
           spawnParticles(p.x,p.y,'#ffcc44',12);
         }
       }
-      // Mark action
       if(who===1) G.p1Acted=true; else G.p2Acted=true;
       if(isSolo()){
         enemyTurn();
@@ -732,7 +1444,7 @@ function attackAdjacent(who){
           G.p1Acted=false;G.p2Acted=false;
           enemyTurn();
         }else{
-          addMsg(who===1?'🐱 Waiting for 🐼...':'🐼 Waiting for 🐱...','info');
+          addMsg(who===1?'🐾 Waiting for 🐼...':'🐼 Waiting for 🐾...','info');
         }
       }
       return;
@@ -740,7 +1452,6 @@ function attackAdjacent(who){
   }
   addMsg('Nothing to attack nearby!','');
 }
-
 function useHealHerb(){
   if(G.state!=='playing')return;
   initAudio();
@@ -771,7 +1482,6 @@ function useHealHerb(){
     addMsg('No healing herbs! Press P to buy some.','hurt');
   }
 }
-
 function useExpHerb(){
   if(G.state!=='playing')return;
   initAudio();
@@ -791,12 +1501,10 @@ function useExpHerb(){
     addMsg('No experience herbs! Press P to buy some.','hurt');
   }
 }
-
 function tryDescend(){
   if(G.state!=='playing')return;
   initAudio();
   if(isDuo()){
-    // Both alive players must be on stairs
     const p1onStairs = G.grid[G.p1.y] && G.grid[G.p1.y][G.p1.x]==='>';
     const p2onStairs = G.grid[G.p2.y] && G.grid[G.p2.y][G.p2.x]==='>';
     if(!G.p1.alive && !G.p2.alive) return;
@@ -804,22 +1512,25 @@ function tryDescend(){
       addMsg('No stairs here! Look for ▼ on the map.','');
       return;
     }
-    if(!p1onStairs){
-      addMsg('▼ Waiting for 🐱 to step on the stairs...','info');return;
-    }
-    if(!p2onStairs){
-      addMsg('▼ Waiting for 🐼 to step on the stairs...','info');return;
-    }
+    if(!p1onStairs){addMsg('▼ Waiting for 🐾 to step on the stairs...','info');return;}
+    if(!p2onStairs){addMsg('▼ Waiting for 🐼 to step on the stairs...','info');return;}
+    // Award moonstone for completing a floor
+    homeData.moonstones+=2;
+    saveHome();
     G.floor++;
+    if(G.floor>G.maxFloorReached) G.maxFloorReached=G.floor;
     sfxDescend();
-    addMsg(`▼ Descending to floor ${G.floor}...`,'info');
+    addMsg(`▼ Descending to floor ${G.floor}... +2 🔮`,'info');
     generateFloor();
   }else{
     const p=G.p1;
     if(G.grid[p.y][p.x]==='>'){
+      homeData.moonstones+=2;
+      saveHome();
       G.floor++;
+      if(G.floor>G.maxFloorReached) G.maxFloorReached=G.floor;
       sfxDescend();
-      addMsg(`▼ Descending to floor ${G.floor}...`,'info');
+      addMsg(`▼ Descending to floor ${G.floor}... +2 🔮`,'info');
       generateFloor();
     }else{
       addMsg('No stairs here! Look for ▼ on the map.','');
@@ -829,12 +1540,11 @@ function tryDescend(){
 
 // ─── Enemy turn ───
 function nearestPlayer(x,y){
-  // Find nearest alive player; if solo, only P1
   if(isSolo()) return G.p1;
   const cands=[];
   if(G.p1.alive) cands.push(G.p1);
   if(G.p2.alive) cands.push(G.p2);
-  if(!cands.length) return G.p1; // fallback
+  if(!cands.length) return G.p1;
   let best=cands[0],bd=Math.abs(best.x-x)+Math.abs(best.y-y);
   for(let i=1;i<cands.length;i++){
     const d=Math.abs(cands[i].x-x)+Math.abs(cands[i].y-y);
@@ -842,12 +1552,10 @@ function nearestPlayer(x,y){
   }
   return best;
 }
-
 function enemyTurn(){
   if(G.state!=='playing')return;
   for(const e of G.enemies){
     if(e.stunned){e.stunned=false;continue;}
-    // Pick target: nearest alive player
     const target=nearestPlayer(e.x,e.y);
     if(!target.alive) continue;
     const dx=target.x-e.x, dy=target.y-e.y;
@@ -857,7 +1565,6 @@ function enemyTurn(){
       target.hp-=dmg;
       sfxHurt();
       triggerShake(0.15);triggerFlash('#ff0000',0.15);
-      // Determine which player got hit
       const isP1=target===G.p1;
       const who=isP1?1:2;
       addMsg(`🩸 ${e.type.replace(/_/g,' ')} attacks P${who} for ${dmg} damage!`,'hurt');
@@ -867,7 +1574,6 @@ function enemyTurn(){
         sfxDeath();
         addMsg(`💀 P${who} has fallen!`,'hurt');
         if(isDuo()){
-          // Check if both are dead
           if(!G.p1.alive && !G.p2.alive){
             G.state='dead';
             addMsg('💀 The team is defeated...','hurt');
@@ -889,7 +1595,6 @@ function enemyTurn(){
         let nx,ny;
         if(Math.abs(dx)>=Math.abs(dy)){nx=e.x+mx;ny=e.y;}
         else{nx=e.x;ny=e.y+my;}
-        // Don't walk onto a player
         let onPlayer=(G.p1.alive && nx===G.p1.x && ny===G.p1.y);
         if(isDuo()) onPlayer = onPlayer || (G.p2.alive && nx===G.p2.x && ny===G.p2.y);
         if(nx>=0&&nx<MAP_W&&ny>=0&&ny<MAP_H&&G.grid[ny][nx]!=='#'&&!enemyAt(nx,ny)&&!onPlayer){
@@ -947,8 +1652,8 @@ function renderShop(){
   document.getElementById('shopMsg').textContent=G.shopMsg;
 }
 
-// ─── Mobile controls ───
-function doMove(dx,dy,who){initAudio();who=who||1;if(G.state==='modeSelect'){selectMode('solo');return;}if(G.state==='title'){newGame();return;}movePlayer(dx,dy,who);}
+// ─── Mobile/desktop actions ───
+function doMove(dx,dy,who){initAudio();who=who||1;movePlayer(dx,dy,who);}
 function doAttack(who){initAudio();who=who||1;attackAdjacent(who);}
 function doHeal(){initAudio();useHealHerb();}
 function doExpHerb(){initAudio();useExpHerb();}
@@ -957,7 +1662,7 @@ function doDescend(){initAudio();tryDescend();}
 function doRevive(){initAudio();revivePlayer();}
 
 // ─── Speed toggle ───
-var gameSpeed=1; // 1=normal, 2=fast
+var gameSpeed=1;
 function toggleSpeed(){
   gameSpeed=gameSpeed===1?2:1;
   var btn=document.getElementById('btnSpeed');
@@ -968,7 +1673,23 @@ function toggleSpeed(){
   }
 }
 
-// ─── Touch device detection + Joystick ───
+// ─── Confirm exit game ───
+function confirmExitGame(){
+  if(G.state==='dead'||G.state==='won'){
+    // Just leave — state is preserved in save
+    saveGame();
+    showPage('home');
+    refreshHomeUI();
+    return;
+  }
+  showConfirm('退出当前游戏？\n进度会自动保存。',()=>{
+    saveGame();
+    showPage('home');
+    refreshHomeUI();
+  });
+}
+
+// ─── Touch detection + joystick ───
 (function detectTouch(){
   function showTouchControls(){
     var tc=document.getElementById('touchControls');
@@ -983,9 +1704,7 @@ function toggleSpeed(){
   window.addEventListener('touchmove',showTouchControls,{passive:true});
   if('ontouchstart' in window || navigator.maxTouchPoints>0) showTouchControls();
 
-  // ── Joystick logic (supports P1 and P2 joysticks) ──
   var deadZone=15;
-
   function createJoystick(knobId,baseId,who){
     var knob=document.getElementById(knobId);
     var base=document.getElementById(baseId);
@@ -1033,8 +1752,7 @@ function toggleSpeed(){
 
     base.addEventListener('touchstart',function(e){
       e.preventDefault(); initAudio();
-      if(G.state==='modeSelect'){selectMode('solo');return;}
-      if(G.state==='title'){newGame();return;}
+      if(G.state!=='playing')return;
       active=true;
       touchId=e.changedTouches[0].identifier;
       var c=getCenter(), t=e.changedTouches[0];
@@ -1077,36 +1795,32 @@ function toggleSpeed(){
         }
       }
     });
-    return {stop:stopMove, getActive:function(){return active;}};
+    return {stop:stopMove};
   }
 
-  // Create P1 joystick (always). P2 joystick only active in duo.
-  var joy1=createJoystick('joystickKnob','joystickBase',1);
-  var joy2=createJoystick('joystickKnob2','joystickBase2',2);
+  createJoystick('joystickKnob','joystickBase',1);
 })();
 
-// ─── Input ───
+// ─── Keyboard input ───
 document.addEventListener('keydown',e=>{
+  // Modal Escape
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal-overlay.active').forEach(m=>m.classList.remove('active'));
+    if(G.state==='shop')closeShop();
+    return;
+  }
+  // Don't intercept global keys when modal open (except escape)
+  if(document.querySelector('.modal-overlay.active')) return;
+
   initAudio();
   const k=e.key;
-  if(G.state==='modeSelect'){
-    if(k==='1'||k==='s'||k==='S') selectMode('solo');
-    else if(k==='2'||k==='d'||k==='D') selectMode('duo');
-    return;
-  }
-  if(G.state==='title'){
-    if(k==='Enter'||k===' '){newGame();e.preventDefault();}
-    else if(k==='m'||k==='M'){changeMode();e.preventDefault();}
-    return;
-  }
   if(G.state==='shop'){
-    if(k==='Escape'||k==='p'||k==='P')closeShop();
+    if(k==='p'||k==='P')closeShop();
     else if(k>='1'&&k<='7')buyItem(parseInt(k)-1);
     e.preventDefault();return;
   }
   if(G.state==='playing'){
     if(isDuo()){
-      // P1: WASD; P2: Arrows
       if(k==='w'||k==='W'){movePlayer(0,-1,1);e.preventDefault();return;}
       else if(k==='s'||k==='S'){movePlayer(0,1,1);e.preventDefault();return;}
       else if(k==='a'||k==='A'){movePlayer(-1,0,1);e.preventDefault();return;}
@@ -1118,7 +1832,6 @@ document.addEventListener('keydown',e=>{
       else if(k===' '){attackAdjacent(1);e.preventDefault();return;}
       else if(k==='Enter'){attackAdjacent(2);e.preventDefault();return;}
     }else{
-      // Solo: WASD/Arrows both move; Space attacks
       if(k==='w'||k==='W'||k==='ArrowUp'){movePlayer(0,-1,1);e.preventDefault();return;}
       else if(k==='s'||k==='S'||k==='ArrowDown'){movePlayer(0,1,1);e.preventDefault();return;}
       else if(k==='a'||k==='A'||k==='ArrowLeft'){movePlayer(-1,0,1);e.preventDefault();return;}
@@ -1137,61 +1850,18 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-// ─── Save / Load ───
-function saveGame(){
-  try{
-    const d=JSON.stringify({
-      floor:G.floor,shared:G.shared,p1:G.p1,p2:G.p2,
-      p1Acted:G.p1Acted,p2Acted:G.p2Acted,
-      messages:G.messages.slice(-20),
-      state:G.state,totalSpent:G.totalSpent,
-      grid:G.grid,rooms:G.rooms,stairsPos:G.stairsPos,
-      enemies:G.enemies,items:G.items,seen:G.seen,
-      // legacy compat: include player alias
-      player:G.shared,
-    });
-    localStorage.setItem('moonstone_save',d);
-    localStorage.setItem('moonstone_mode',mode);
-  }catch(e){}
-}
-function loadGame(){
-  try{
-    const d=localStorage.getItem('moonstone_save');
-    if(!d)return false;
-    const s=JSON.parse(d);
-    // Backwards compat: older saves may only have `player` (which == shared)
-    G.floor=s.floor||1;
-    G.shared=s.shared||s.player||{hp:30,maxHp:30,atk:5,exp:0,level:1,herbs:2,expHerbs:0,kills:0,fovBonus:0};
-    G.p1=s.p1||{x:0,y:0,hp:G.shared.maxHp,maxHp:G.shared.maxHp,alive:true};
-    G.p2=s.p2||{x:G.p1.x,y:G.p1.y,hp:G.shared.maxHp,maxHp:G.shared.maxHp,alive:true};
-    G.p1Acted=!!s.p1Acted;G.p2Acted=!!s.p2Acted;
-    G.messages=s.messages||[];
-    G.state=s.state||'playing';
-    G.totalSpent=s.totalSpent||0;
-    G.grid=s.grid;G.rooms=s.rooms;G.stairsPos=s.stairsPos;
-    G.enemies=s.enemies||[];G.items=s.items||[];G.seen=s.seen||[];
-    G.shopMsg='';
-    syncPlayerAlias();
-    document.getElementById('shopOverlay').style.display='none';
-    return true;
-  }catch(e){return false;}
-}
-
 // ─── Rendering ───
 let animTime=0;
 function resizeCanvas(){
   const wrap=document.getElementById('canvasWrap');
+  if(!wrap) return;
   const cw=wrap.clientWidth, ch=wrap.clientHeight;
   var maxScale=1.5;
-  // If touch controls are shown, leave room at bottom
   var tc=document.getElementById('touchControls');
-  if(tc && tc.classList.contains('active')){
-    maxScale=1.0;
-  }
+  if(tc && tc.classList.contains('active')) maxScale=1.0;
   const cssW=MAP_W*TILE, cssH=MAP_H*TILE;
   const scale=Math.min(cw/cssW,ch/cssH,maxScale);
   const dispW=Math.floor(cssW*scale), dispH=Math.floor(cssH*scale);
-  // High-DPI rendering: internal buffer is dispW * dpr
   const dpr=Math.min(window.devicePixelRatio||1,2);
   canvas.style.width=dispW+'px';
   canvas.style.height=dispH+'px';
@@ -1199,7 +1869,6 @@ function resizeCanvas(){
   canvas.height=Math.floor(dispH*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
-
 function drawTile(x,y,ch,bg,fg){
   const px=x*TILE, py=y*TILE;
   ctx.fillStyle=bg;
@@ -1212,72 +1881,35 @@ function drawTile(x,y,ch,bg,fg){
     ctx.fillText(ch,px+TILE/2,py+TILE/2+1);
   }
 }
-
 function render(dt){
   animTime+=dt;
   updateParticles(dt);
   if(shakeTime>0)shakeTime-=dt;
   if(flashTime>0)flashTime-=dt;
-
   ctx.save();
-  if(shakeTime>0){
-    ctx.translate((Math.random()-0.5)*4,(Math.random()-0.5)*4);
-  }
+  if(shakeTime>0) ctx.translate((Math.random()-0.5)*4,(Math.random()-0.5)*4);
 
-  if(G.state==='modeSelect'){/* nothing — overlay covers canvas */}
-  else if(G.state==='title'){renderTitle();}
-  else if(G.state==='dead'){renderMap();renderDeath();}
-  else if(G.state==='won'){renderMap();renderVictory();}
-  else{renderMap();}
-
-  drawParticles();
-
-  if(flashTime>0&&flashColor){
-    ctx.fillStyle=flashColor;
-    ctx.globalAlpha=flashTime*2;
+  // Only render if game page is visible (canvas may not exist/be hidden otherwise)
+  const gamePage=document.getElementById('page-game');
+  if(gamePage && gamePage.classList.contains('active')){
+    if(G.state==='dead'){renderMap();renderDeath();}
+    else if(G.state==='won'){renderMap();renderVictory();}
+    else{renderMap();}
+    drawParticles();
+    if(flashTime>0&&flashColor){
+      ctx.fillStyle=flashColor;
+      ctx.globalAlpha=flashTime*2;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.globalAlpha=1;
+    }
+  }else{
+    // Clear canvas when not visible
+    ctx.fillStyle='#0a0a14';
     ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.globalAlpha=1;
   }
-
   ctx.restore();
   updateSidebar();
 }
-
-function renderTitle(){
-  ctx.fillStyle='#0a0a14';ctx.fillRect(0,0,canvas.width,canvas.height);
-  // Stars
-  for(let i=0;i<50;i++){
-    const sx=(i*137+50)%canvas.width, sy=(i*89+30)%canvas.height;
-    ctx.fillStyle=`rgba(200,200,255,${0.3+0.3*Math.sin(animTime*2+i)})`;
-    ctx.fillRect(sx,sy,2,2);
-  }
-  // Moon
-  ctx.fillStyle='#ddeeff';
-  ctx.beginPath();ctx.arc(canvas.width/2,canvas.height*0.28,40,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#0a0a14';
-  ctx.beginPath();ctx.arc(canvas.width/2+12,canvas.height*0.28-8,35,0,Math.PI*2);ctx.fill();
-  // Title
-  ctx.fillStyle='#aaddff';ctx.font='bold 32px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText('🌙 Moonstone Quest',canvas.width/2,canvas.height*0.48);
-  ctx.fillStyle='#8888aa';ctx.font='14px monospace';
-  ctx.fillText(isDuo()?'🐱🐼 Duo Mode — Two cats, shared quest':'A Warrior Cats Roguelike',canvas.width/2,canvas.height*0.56);
-  // Cats
-  ctx.font='28px serif';
-  if(isDuo()){
-    ctx.fillStyle='#ddeeff';ctx.fillText('🐱',canvas.width/2-20,canvas.height*0.68);
-    ctx.fillStyle='#f0e0d0';ctx.fillText('🐼',canvas.width/2+20,canvas.height*0.68);
-  }else{
-    ctx.fillStyle='#ddeeff';ctx.fillText('🐱',canvas.width/2,canvas.height*0.68);
-  }
-  // Prompt
-  ctx.fillStyle=`rgba(170,170,200,${0.5+0.5*Math.sin(animTime*3)})`;
-  ctx.font='16px monospace';
-  ctx.fillText('Press Enter to Start',canvas.width/2,canvas.height*0.82);
-  // Mode-change hint
-  ctx.fillStyle='#556';ctx.font='10px monospace';
-  ctx.fillText('Tip: press M to change mode',canvas.width/2,canvas.height*0.90);
-}
-
 function renderMap(){
   ctx.fillStyle='#0a0a14';ctx.fillRect(0,0,canvas.width,canvas.height);
   const p1=G.p1, p2=G.p2, rad=fovRadius();
@@ -1286,18 +1918,15 @@ function renderMap(){
       const vis=visible(x,y);
       const seen=G.seen[y]&&G.seen[y][x];
       const tile=G.grid[y]?G.grid[y][x]:'#';
-
       if(vis){
-        // Player 1
         if(x===p1.x&&y===p1.y){
           drawTile(x,y,null,'#1a1a2e');
           ctx.globalAlpha=p1.alive?1:0.35;
           ctx.fillStyle='#ddeeff';ctx.font=`bold ${TILE-4}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
-          ctx.fillText(p1.alive?'🐱':'👻',x*TILE+TILE/2,y*TILE+TILE/2+1);
+          ctx.fillText(p1.alive?'🐾':'👻',x*TILE+TILE/2,y*TILE+TILE/2+1);
           ctx.globalAlpha=1;
           continue;
         }
-        // Player 2 (duo only)
         if(isDuo() && x===p2.x && y===p2.y && !(x===p1.x && y===p1.y)){
           drawTile(x,y,null,'#1a1a2e');
           ctx.globalAlpha=p2.alive?1:0.35;
@@ -1310,6 +1939,7 @@ function renderMap(){
         if(en){
           drawTile(x,y,null,'#1a1a2e');
           const d=EDATA[en.type];
+          const isBoss=en.type.includes('boss')||en.type==='tigerstar_spirit';
           ctx.fillStyle=en.stunned?'#666':d.col;
           ctx.font=`${TILE-8}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
           ctx.fillText(en.stunned?'💤':d.ch,x*TILE+TILE/2,y*TILE+TILE/2+1);
@@ -1317,7 +1947,7 @@ function renderMap(){
             const bw=TILE-4, bh=3;
             const bx=x*TILE+2, by=y*TILE+1;
             ctx.fillStyle='#440000';ctx.fillRect(bx,by,bw,bh);
-            ctx.fillStyle='#ff4444';ctx.fillRect(bx,by,bw*(en.hp/en.maxHp),bh);
+            ctx.fillStyle=isBoss?'#ff44aa':'#ff4444';ctx.fillRect(bx,by,bw*(en.hp/en.maxHp),bh);
           }
           continue;
         }
@@ -1359,14 +1989,13 @@ function renderMap(){
       }
     }
   }
-  // After tile pass, overlay player mini HP bars above each player (duo)
   if(isDuo()){
     drawPlayerHpOverlay(p1,1);
     drawPlayerHpOverlay(p2,2);
   }
 }
 function drawPlayerHpOverlay(p,who){
-  if(!p.alive) return; // don't draw bar for ghost
+  if(!p.alive) return;
   const w=TILE-4, h=3;
   const bx=p.x*TILE+2, by=p.y*TILE+TILE-h-2;
   ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(bx,by,w,h);
@@ -1374,7 +2003,6 @@ function drawPlayerHpOverlay(p,who){
   const col=frac>0.5?'#44cc44':frac>0.25?'#ccaa33':'#cc4444';
   ctx.fillStyle=col;ctx.fillRect(bx,by,w*frac,h);
 }
-
 function renderDeath(){
   ctx.fillStyle='rgba(20,0,0,0.75)';ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.fillStyle='#ff4444';ctx.font='bold 28px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
@@ -1396,7 +2024,6 @@ function renderDeath(){
   ctx.font='16px monospace';
   ctx.fillText('Press R to retry',canvas.width/2,canvas.height*0.68);
 }
-
 function renderVictory(){
   ctx.fillStyle='rgba(0,0,20,0.75)';ctx.fillRect(0,0,canvas.width,canvas.height);
   const glow=0.3+0.2*Math.sin(animTime*2);
@@ -1414,29 +2041,26 @@ function renderVictory(){
   ctx.font='16px monospace';
   ctx.fillText('Press R to play again',canvas.width/2,canvas.height*0.72);
 }
-
 function updateSidebar(){
   const s=G.shared;
-  // Sidebar: solo uses P1 as the "main" HP; duo shows both
   var sHp=document.getElementById('sHp');
   var hpFill=document.getElementById('hpFill');
+  if(!sHp) return;
   if(isDuo()){
-    // Render combined "P1 / P2" lines
-    var p1txt = `\uD83D\uDC31 P1: HP ${G.p1.hp}/${G.p1.maxHp} | ATK ${s.atk}` + (G.p1.alive?'':' (GHOST)');
-    var p2txt = `\uD83D\uDC3C P2: HP ${G.p2.hp}/${G.p2.maxHp} | ATK ${s.atk}` + (G.p2.alive?'':' (GHOST)');
-    // Put both into a custom container
-    var sidebar=document.getElementById('sidebar');
-    if(!document.getElementById('sP1')){
-      // Inject extra stat lines if not present
+    var p1txt = `🐾 P1: HP ${G.p1.hp}/${G.p1.maxHp} | ATK ${s.atk}` + (G.p1.alive?'':' (GHOST)');
+    var p2txt = `🐼 P2: HP ${G.p2.hp}/${G.p2.maxHp} | ATK ${s.atk}` + (G.p2.alive?'':' (GHOST)');
+    var sidebar=document.getElementById('game-sidebar');
+    if(sidebar && !document.getElementById('sP1')){
       var div1=document.createElement('div');div1.className='stat';div1.id='sP1';
       var div2=document.createElement('div');div2.className='stat';div2.id='sP2';
       var ref=document.getElementById('sHp');
       ref.parentNode.insertBefore(div1,ref);
       ref.parentNode.insertBefore(div2,ref);
     }
-    document.getElementById('sP1').innerHTML='<span class="val">'+p1txt+'</span>';
-    document.getElementById('sP2').innerHTML='<span class="val">'+p2txt+'</span>';
-    // Use team total HP for the bar (sum alive)
+    if(document.getElementById('sP1')){
+      document.getElementById('sP1').innerHTML='<span class="val">'+p1txt+'</span>';
+      document.getElementById('sP2').innerHTML='<span class="val">'+p2txt+'</span>';
+    }
     var totH=0,totM=0;
     if(G.p1.alive){totH+=G.p1.hp;totM+=G.p1.maxHp;}
     if(G.p2.alive){totH+=G.p2.hp;totM+=G.p2.maxHp;}
@@ -1445,9 +2069,7 @@ function updateSidebar(){
     hpFill.style.width=(totH/totM*100)+'%';
     hpFill.style.background=totH>totM*0.5?'#44cc44':totH>totM*0.25?'#ccaa33':'#cc4444';
   }else{
-    // Solo: use P1
     var p=G.p1;
-    // Remove duo rows if present
     var sP1=document.getElementById('sP1'),sP2=document.getElementById('sP2');
     if(sP1)sP1.remove();if(sP2)sP2.remove();
     sHp.textContent=`${p.hp}/${p.maxHp}`;
@@ -1461,24 +2083,19 @@ function updateSidebar(){
   document.getElementById('sHerb').textContent=s.herbs;
   document.getElementById('sExpH').textContent=s.expHerbs;
   document.getElementById('sFloor').textContent=`${G.floor}/${MAX_FLOOR}`;
-  // Mobile HUD update
   var hhp=document.getElementById('hudHp');
   if(hhp){
     if(isDuo()){
-      // Show both rows
       var p1Row=document.getElementById('hudP1Row');
       var p2Row=document.getElementById('hudP2Row');
       if(p2Row) p2Row.style.display='';
-      // P1
       document.getElementById('hudHp').textContent=G.p1.hp+'/'+G.p1.maxHp;
       document.getElementById('hudHpFill').style.width=(G.p1.hp/G.p1.maxHp*100)+'%';
       document.getElementById('hudHpFill').style.background=G.p1.hp>G.p1.maxHp*0.5?'#44cc44':G.p1.hp>G.p1.maxHp*0.25?'#ccaa33':'#cc4444';
-      // P2
       document.getElementById('hudHp2').textContent=G.p2.hp+'/'+G.p2.maxHp;
       document.getElementById('hudHpFill2').style.width=(G.p2.hp/G.p2.maxHp*100)+'%';
       document.getElementById('hudHpFill2').style.background=G.p2.hp>G.p2.maxHp*0.5?'#44cc44':G.p2.hp>G.p2.maxHp*0.25?'#ccaa33':'#cc4444';
     }else{
-      // Solo: hide P2 row
       var p2Row=document.getElementById('hudP2Row');
       if(p2Row) p2Row.style.display='none';
       document.getElementById('hudHp').textContent=G.p1.hp+'/'+G.p1.maxHp;
@@ -1489,12 +2106,11 @@ function updateSidebar(){
     document.getElementById('hudAtk').textContent=s.atk;
     document.getElementById('hudExp').textContent=s.exp+'/'+expToNext();
     document.getElementById('hudExpFill').style.width=(s.exp/expToNext()*100)+'%';
-    document.getElementById('hudHerbs').textContent='\u{1F33F}'+s.herbs;
-    document.getElementById('hudFloor').textContent='\u{1F3E0}'+G.floor+'/'+MAX_FLOOR;
+    document.getElementById('hudHerbs').textContent='🌿'+s.herbs;
+    document.getElementById('hudFloor').textContent='🏠'+G.floor+'/'+MAX_FLOOR;
     var lastMsg=G.messages.length?G.messages[G.messages.length-1].txt:'';
     document.getElementById('hudMsg').textContent=lastMsg;
   }
-  // Update touch buttons for dead state
   var ba=document.getElementById('btnAttack');
   var bh=document.getElementById('btnHeal');
   var be=document.getElementById('btnExp');
@@ -1502,50 +2118,25 @@ function updateSidebar(){
   var bs=document.getElementById('btnShop');
   var br=document.getElementById('btnRestart');
   var bv=document.getElementById('btnRevive');
-  // Determine if we can revive
   var canRevive = (G.state==='dead') && G.shared.herbs>=5;
   if(bv) bv.style.display = canRevive ? '' : 'none';
-  if(ba && G.state==='dead' && canRevive){
-    // Show only revive + restart
-    ba.style.display='none';
-    bh.style.display='none';
-    be.style.display='none';
-    bd.style.display='none';
-    bs.style.display='none';
-    br.style.display='';
-    document.getElementById('btnSpeed').style.display='none';
-  } else if(ba && G.state==='dead'){
-    ba.style.display='none';
-    bh.style.display='none';
-    be.style.display='none';
-    bd.style.display='none';
-    bs.style.display='none';
-    br.style.display='';
-    document.getElementById('btnSpeed').style.display='none';
-  } else if(ba && G.state==='won'){
-    ba.style.display='none';
-    bh.style.display='none';
-    be.style.display='none';
-    bd.style.display='none';
-    bs.style.display='none';
-    br.style.display='';
-    document.getElementById('btnSpeed').style.display='none';
+  if(ba && (G.state==='dead' || G.state==='won')){
+    ba.style.display='none';bh.style.display='none';be.style.display='none';
+    bd.style.display='none';bs.style.display='none';br.style.display='';
+    var bs2=document.getElementById('btnSpeed');if(bs2)bs2.style.display='none';
   } else if(ba){
     ba.innerHTML='<span class="icon">⚔️</span><span class="label">Attack</span>';
     ba.setAttribute('ontouchstart','event.preventDefault();doAttack(1)');
-    ba.style.display='';
-    bh.style.display='';
-    be.style.display='';
-    bd.style.display='';
-    bs.style.display='';
-    br.style.display='';
-    document.getElementById('btnSpeed').style.display='';
+    ba.style.display='';bh.style.display='';be.style.display='';
+    bd.style.display='';bs.style.display='';br.style.display='';
+    var bs3=document.getElementById('btnSpeed');if(bs3)bs3.style.display='';
   }
-  // messages
   const log=document.getElementById('msgLog');
-  const recent=G.messages.slice(-6);
-  log.innerHTML=recent.map(m=>`<div class="msg ${m.cls}">${m.txt}</div>`).join('');
-  log.scrollTop=log.scrollHeight;
+  if(log){
+    const recent=G.messages.slice(-6);
+    log.innerHTML=recent.map(m=>`<div class="msg ${m.cls}">${m.txt}</div>`).join('');
+    log.scrollTop=log.scrollHeight;
+  }
 }
 
 // ─── Game loop ───
@@ -1557,67 +2148,38 @@ function loop(ts){
   requestAnimationFrame(loop);
 }
 
-// ─── Init ───
+// ============================================================
+// 🚀 INIT
+// ============================================================
 window.addEventListener('resize',resizeCanvas);
 resizeCanvas();
 
-// Mode selection: load persisted mode from localStorage
-function loadMode(){
-  try{
-    var m=localStorage.getItem('moonstone_mode');
-    if(m==='solo'||m==='duo') mode=m;
-  }catch(e){}
-}
-function saveMode(){
-  try{localStorage.setItem('moonstone_mode',mode);}catch(e){}
-}
 loadMode();
+loadHome();
+loadProfile();
 syncPlayerAlias();
-
-function selectMode(m){
-  initAudio();
-  if(m!=='solo'&&m!=='duo') return;
-  mode=m;
-  saveMode();
-  syncPlayerAlias();
-  document.body.classList.toggle('duo-mode',m==='duo');
-  document.getElementById('modeOverlay').style.display='none';
-  G.state='title';
-  // Auto-start in the new mode for instant play
-  newGame();
-}
-
-G.state='modeSelect';
 document.body.classList.toggle('duo-mode',isDuo());
 
 // Try load saved game
-if(!loadGame()){
-  G.state='modeSelect';
-  document.getElementById('modeOverlay').style.display='flex';
+if(loadGame()){
+  // Save loaded — game state preserved
+  console.log('Save loaded. Floor:',G.floor,'Mode:',mode);
+  refreshHomeUI();
 }else{
-  if(G.state==='shop'){G.state='playing';document.getElementById('shopOverlay').style.display='none';}
-  document.getElementById('modeOverlay').style.display='none';
-  document.body.classList.toggle('duo-mode',isDuo());
-  syncPlayerAlias();
+  // No save — fresh start
+  G.floor=1;G.maxFloorReached=1;
+  refreshHomeUI();
 }
 
-// Auto-save periodically
-setInterval(()=>{if(G.state==='playing'||G.state==='dead'||G.state==='won')saveGame();},5000);
+// Auto-save
+setInterval(()=>{
+  if(G.state==='playing'||G.state==='dead'||G.state==='won') saveGame();
+},5000);
 
+// Start game loop
 requestAnimationFrame(loop);
 
-// M key: change mode (returns to mode-select; clears in-progress save to avoid mismatched state)
-function changeMode(){
-  mode = (mode==='solo')?'duo':'solo';
-  saveMode();
-  syncPlayerAlias();
-  document.body.classList.toggle('duo-mode',isDuo());
-  try{localStorage.removeItem('moonstone_save');}catch(e){}
-  G.state='modeSelect';
-  document.getElementById('modeOverlay').style.display='flex';
-}
-
-// ── Floating Ice button (draggable, snaps to edge) ──
+// ─── Ice button (draggable) ───
 (function(){
 var b=document.getElementById('iceBtn');if(!b)return;
 var drag=false,moved=false,sx,sy,ox,oy;
@@ -1637,17 +2199,28 @@ b.addEventListener('pointermove',function(e){
 b.addEventListener('pointerup',function(e){
   if(!drag)return;drag=false;
   if(!moved){location.href='../index.html';return;}
-  // snap to nearest edge (left or right)
   var r=b.getBoundingClientRect();
-  var midY=r.top+r.height/2;
-  if(r.left+r.width/2<window.innerWidth/2){
-    b.style.left='6px';b.style.right='auto';
-  }else{
-    b.style.left='auto';b.style.right='6px';
-  }
-  // clamp vertical
+  if(r.left+r.width/2<window.innerWidth/2){b.style.left='6px';b.style.right='auto';}
+  else{b.style.left='auto';b.style.right='6px';}
   var maxY=window.innerHeight-r.height-6;
   var fy=Math.max(6,Math.min(parseInt(b.style.top)||r.top,maxY));
   b.style.top=fy+'px';b.style.bottom='auto';
 });
-})();// ===== AUTO FULLSCREEN =====function tryFullscreen(){  const el = document.documentElement;  const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;  if(rfs){    rfs.call(el).catch(()=>{});  }}let fullscreenDone = false;document.addEventListener('click', ()=>{  if(!fullscreenDone){fullscreenDone=true; tryFullscreen();}}, {once:true});document.addEventListener('touchstart', ()=>{  if(!fullscreenDone){fullscreenDone=true; tryFullscreen();}}, {once:true});</script></body></html>
+})();
+
+// ===== AUTO FULLSCREEN =====
+function tryFullscreen(){
+  const el=document.documentElement;
+  const rfs=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;
+  if(rfs) rfs.call(el).catch(()=>{});
+}
+let fullscreenDone=false;
+document.addEventListener('click',()=>{if(!fullscreenDone){fullscreenDone=true;tryFullscreen();}},{once:true});
+document.addEventListener('touchstart',()=>{if(!fullscreenDone){fullscreenDone=true;tryFullscreen();}},{once:true});
+
+// Update home UI on load
+refreshHomeUI();
+console.log('🐾 猫武士大冒险 loaded');
+</script>
+</body>
+</html>

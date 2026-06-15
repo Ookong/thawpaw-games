@@ -3,10 +3,10 @@
   "games": [
     {
       "id": "moonstone-quest",
-      "name": "Moonstone Quest",
+      "name": "猫武士大冒险",
       "file": "games/moonstone-quest.html",
       "icon": "moonstone",
-      "description": "Descend 10 floors to find the Moonstone!",
+      "description": "猫咪学徒深入地下10层，寻找传说中的月亮石 🔮",
       "color": "#4488ff"
     },
     {
