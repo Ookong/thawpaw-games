@@ -740,10 +740,28 @@ function showPage(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const el=document.getElementById('page-'+page);
   if(el) el.classList.add('active');
-  if(page==='game') G.state='playing';
-  else if(page==='levelmap'){G.state='levelmap';renderLevelMap();}
-  else if(page==='home'){G.state='home';refreshHomeUI();}
-  else if(page==='profile'){G.state='home';refreshProfileUI();}
+  if(page==='game'){
+    G.state='playing';
+    showTouchControls();
+  }else{
+    hideTouchControls();
+    if(page==='levelmap'){G.state='levelmap';renderLevelMap();}
+    else if(page==='home'){G.state='home';refreshHomeUI();}
+    else if(page==='profile'){G.state='home';refreshProfileUI();}
+  }
+}
+// Touch control visibility — only during gameplay
+function showTouchControls(){
+  if(!touchSupported) return;
+  const tc=document.getElementById('touchControls');
+  if(tc&&!tc.classList.contains('active')) tc.classList.add('active');
+  document.body.classList.add('touch-active');
+  if(typeof resizeCanvas==='function') setTimeout(resizeCanvas,50);
+}
+function hideTouchControls(){
+  const tc=document.getElementById('touchControls');
+  if(tc&&tc.classList.contains('active')) tc.classList.remove('active');
+  document.body.classList.remove('touch-active');
 }
 function openModal(id){
   const m=document.getElementById(id);
@@ -1690,19 +1708,19 @@ function confirmExitGame(){
 }
 
 // ─── Touch detection + joystick ───
+var touchSupported=false; // Will be set in detectTouch IIFE
 (function detectTouch(){
-  function showTouchControls(){
-    var tc=document.getElementById('touchControls');
-    if(tc.classList.contains('active'))return;
-    tc.classList.add('active');
-    document.body.classList.add('touch-active');
-    window.removeEventListener('touchstart',showTouchControls);
-    window.removeEventListener('touchmove',showTouchControls);
-    setTimeout(resizeCanvas,50);
+  // Just detect capability; don't show controls until game page
+  function detect(){
+    if('ontouchstart' in window || navigator.maxTouchPoints>0){
+      touchSupported=true;
+    }
+    window.removeEventListener('touchstart',detect);
+    window.removeEventListener('touchmove',detect);
   }
-  window.addEventListener('touchstart',showTouchControls,{passive:true});
-  window.addEventListener('touchmove',showTouchControls,{passive:true});
-  if('ontouchstart' in window || navigator.maxTouchPoints>0) showTouchControls();
+  window.addEventListener('touchstart',detect,{passive:true});
+  window.addEventListener('touchmove',detect,{passive:true});
+  if('ontouchstart' in window || navigator.maxTouchPoints>0) detect();
 
   var deadZone=15;
   function createJoystick(knobId,baseId,who){
