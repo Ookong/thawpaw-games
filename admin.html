@@ -547,16 +547,6 @@ function hqLogin(){
       showLoginError('网络连接超时，请检查网络后重试');
     }
   });
-    document.getElementById('login-btn').disabled = false;
-    document.getElementById('login-btn').textContent = '登录';
-    // Network error — fallback to localStorage
-    const players = JSON.parse(localStorage.getItem('thawpawPlayers') || '{}');
-    if(players[id]){
-      showNickStep();
-    } else {
-      showLoginError('无法连接后端，且本地无此 ID 记录');
-    }
-  });
 }
 
 function showNickStep(){
