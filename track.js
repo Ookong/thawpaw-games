@@ -4,12 +4,12 @@
  * 自动记录：玩家 ID + 当前页面 + 事件类型
  * 调用方式：window.thawpawTrack('view') 或 window.thawpawTrack('play')
  *
- * 后端：Cloudflare Worker (https://tpg-hq.wangjieqi.workers.dev/track)
+ * 后端：Cloudflare Worker (https://tpg-hq.icepaw.workers.dev/track)
  * URL 配置在 localStorage key 'tpgCfBackendUrl'
  */
 (function () {
   var CF_BACKEND_KEY = 'tpgCfBackendUrl';
-  var DEFAULT_CF_URL = 'https://tpg-hq.wangjieqi.workers.dev';
+  var DEFAULT_CF_URL = 'https://tpg-hq.icepaw.workers.dev';
 
   function getBackendBase() {
     try {

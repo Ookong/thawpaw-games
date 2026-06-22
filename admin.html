@@ -315,8 +315,8 @@ tr:hover td{background:var(--card2)}
   <div class="content">
     <!-- Cloudflare Worker URL config -->
     <div class="gas-config" id="cf-config" style="display:none">
-      <span>⚙️ 后端 URL（当前：<code id="cf-current">tpg-hq.wangjieqi.workers.dev</code>）：</span>
-      <input type="text" id="cf-url-input" placeholder="https://tpg-hq.wangjieqi.workers.dev">
+      <span>⚙️ 后端 URL（当前：<code id="cf-current">tpg-hq.icepaw.workers.dev</code>）：</span>
+      <input type="text" id="cf-url-input" placeholder="https://tpg-hq.icepaw.workers.dev">
       <button onclick="saveBackendUrl()">保存</button>
     </div>
 
@@ -425,7 +425,7 @@ tr:hover td{background:var(--card2)}
 
 const SUPER_ADMIN_ID = '94568945';
 const CF_BACKEND_KEY = 'tpgCfBackendUrl';
-const DEFAULT_CF_URL = 'https://tpg-hq.wangjieqi.workers.dev';
+const DEFAULT_CF_URL = 'https://tpg-hq.icepaw.workers.dev';
 let backendUrl = localStorage.getItem(CF_BACKEND_KEY) || DEFAULT_CF_URL;
 let session = null; // { id, nickname, role }
 
