@@ -85,6 +85,64 @@ footer{position:relative;z-index:1;text-align:center;padding:2rem;color:var(--di
 @media(min-width:769px) and (max-width:1024px){
   .games-grid{grid-template-columns:repeat(2,1fr)}
 }
+
+/* ── Modal (shared) ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card);border-radius:14px;padding:22px;width:100%;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.5);border:1px solid var(--border)}
+.modal .modal-close{position:absolute;top:10px;right:14px;cursor:pointer;font-size:22px;color:#888;z-index:1;background:none;border:none;padding:4px 8px;line-height:1}
+.modal .modal-close:hover{color:#ff5577}
+
+/* ── Feedback floating button ── */
+.feedback-btn{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:50;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#48c6ef);color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 6px 20px rgba(108,99,255,.45);transition:transform .22s,box-shadow .22s;display:flex;align-items:center;justify-content:center;user-select:none}
+.feedback-btn:hover{transform:translateY(-50%) scale(1.08);box-shadow:0 8px 26px rgba(108,99,255,.6)}
+.feedback-btn:active{transform:translateY(-50%) scale(.96)}
+.feedback-btn .pulse{position:absolute;top:-3px;right:-3px;width:12px;height:12px;background:#ff5577;border:2px solid var(--bg);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.6}}
+
+/* ── Feedback modal ── */
+.feedback-modal{max-width:420px;padding:24px}
+.feedback-modal h3{margin-bottom:14px;font-size:18px}
+.feedback-info{background:var(--card2);padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:13px;color:var(--text2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.feedback-info .fb-id{color:var(--gold);font-family:monospace;font-weight:600}
+.fb-label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;margin-top:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+#fb-category,#fb-content{width:100%;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;transition:border-color .2s}
+#fb-category{cursor:pointer;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--text2) 50%),linear-gradient(135deg,var(--text2) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+#fb-content{min-height:100px;max-height:240px;resize:vertical}
+#fb-category:focus,#fb-content:focus{outline:none;border-color:var(--accent)}
+.fb-actions{display:flex;gap:8px;margin-top:16px}
+.fb-btn{flex:1;padding:11px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.fb-btn:hover{opacity:.88}
+.fb-btn-primary{background:linear-gradient(135deg,#6c63ff,#48c6ef);color:#fff}
+.fb-btn-ghost{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.fb-status{margin-top:10px;padding:10px;border-radius:8px;font-size:13px;text-align:center;display:none}
+.fb-status.success{background:rgba(72,198,239,.15);color:#48c6ef;display:block}
+.fb-status.error{background:rgba(255,85,119,.15);color:#ff5577;display:block}
+.fb-hint{font-size:11px;color:var(--dim);margin-top:10px;text-align:center;line-height:1.4}
+
+/* ── Feedback inbox (admin view) ── */
+.feedback-inbox{max-width:760px;margin:0 auto;padding:20px 16px 60px;position:relative;z-index:1}
+.feedback-inbox h1{font-size:1.8rem;margin-bottom:8px;background:linear-gradient(135deg,#6c63ff,#48c6ef);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.feedback-inbox .sub{color:var(--text2);font-size:13px;margin-bottom:24px}
+.fb-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;position:relative}
+.fb-item-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.fb-item-id{color:var(--gold);font-family:monospace;font-weight:700;font-size:14px}
+.fb-item-cat{font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(108,99,255,.18);color:#9d97ff;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.fb-item-cat.bug{background:rgba(255,85,119,.18);color:#ff7a99}
+.fb-item-cat.suggestion{background:rgba(72,198,239,.18);color:#48c6ef}
+.fb-item-cat.praise{background:rgba(255,204,68,.18);color:#ffcc44}
+.fb-item-time{font-size:11px;color:var(--dim);font-family:monospace}
+.fb-item-content{color:var(--text);font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.fb-item-del{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--dim);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:6px}
+.fb-item-del:hover{color:#ff5577;background:rgba(255,85,119,.12)}
+.fb-empty{text-align:center;padding:60px 20px;color:var(--dim)}
+.fb-empty .emoji{font-size:48px;margin-bottom:12px}
+.fb-actions-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.fb-export-btn{padding:10px 18px;background:linear-gradient(135deg,#6c63ff,#48c6ef);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.fb-export-btn:hover{opacity:.88}
+.fb-export-btn.ghost{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.fb-stats{display:flex;gap:14px;color:var(--text2);font-size:13px;margin-bottom:14px;flex-wrap:wrap}
+.fb-stats b{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -135,6 +193,55 @@ footer{position:relative;z-index:1;text-align:center;padding:2rem;color:var(--di
 </div>
 
 <footer>Made with ❄️ by IcePaw &amp; ThawPaw</footer>
+
+<!-- ===== FEEDBACK FLOATING BUTTON ===== -->
+<button class="feedback-btn" id="feedback-btn" onclick="openFeedback()" title="反馈">
+  💬
+  <span class="pulse"></span>
+</button>
+
+<!-- ===== FEEDBACK MODAL ===== -->
+<div id="feedback-modal" class="modal-overlay">
+  <div class="modal feedback-modal">
+    <div class="modal-close" onclick="closeFeedback()">×</div>
+    <h3>💬 反馈</h3>
+    <div class="feedback-info">
+      <span>游戏ID：<span class="fb-id" id="fb-player-id">--------</span></span>
+      <span>昵称：<span id="fb-nickname">未命名</span></span>
+    </div>
+    <label class="fb-label" for="fb-category">类型</label>
+    <select id="fb-category">
+      <option value="bug">🐛 Bug / 问题</option>
+      <option value="suggestion">💡 建议 / 想法</option>
+      <option value="praise">⭐ 表扬 / 喜欢</option>
+      <option value="other" selected>💬 其他</option>
+    </select>
+    <label class="fb-label" for="fb-content">内容</label>
+    <textarea id="fb-content" placeholder="告诉我们你的想法、问题、建议…"></textarea>
+    <div class="fb-actions">
+      <button class="fb-btn fb-btn-primary" onclick="submitFeedback()">📤 提交反馈</button>
+      <button class="fb-btn fb-btn-ghost" onclick="closeFeedback()">取消</button>
+    </div>
+    <div class="fb-status" id="fb-status"></div>
+    <div class="fb-hint">反馈会保存到本地，同时生成邮件草稿发给作者</div>
+  </div>
+</div>
+
+<!-- ===== FEEDBACK INBOX (admin view) ===== -->
+<div id="page-inbox" class="page">
+  <div class="feedback-inbox">
+    <h1>📥 游客反馈</h1>
+    <div class="sub">IcePaw 看的（URL 加 <code>?feedback=inbox</code> 进入）</div>
+    <div class="fb-stats" id="fb-stats"></div>
+    <div class="fb-actions-bar">
+      <button class="fb-export-btn" onclick="exportFeedbackMd()">📝 导出为 .md</button>
+      <button class="fb-export-btn" onclick="exportFeedbackTxt()">📄 导出为 .txt</button>
+      <button class="fb-export-btn ghost" onclick="copyFeedbackForWord()">📋 复制（Word 格式）</button>
+      <button class="fb-export-btn ghost" onclick="clearAllFeedback()" style="background:rgba(255,85,119,.15);color:#ff7a99;border-color:rgba(255,85,119,.3)">🗑️ 清空全部</button>
+    </div>
+    <div id="fb-list"></div>
+  </div>
+</div>
 
 <script>
 // ── Thumbnail artwork (inline SVG for each game) ──
@@ -368,6 +475,190 @@ refreshPortal();
     grid.appendChild(card);
   }
 })();
+
+// ===== FEEDBACK =====
+const FB_STORAGE_KEY = 'thawpawFeedback';
+const FB_EMAIL = 'thawflow@outlook.com';
+
+function getFeedbackList(){
+  try{ return JSON.parse(localStorage.getItem(FB_STORAGE_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function saveFeedbackList(list){
+  localStorage.setItem(FB_STORAGE_KEY, JSON.stringify(list));
+}
+function openFeedback(){
+  const prof = getPortalProfile();
+  document.getElementById('fb-player-id').textContent = getPlayerId();
+  document.getElementById('fb-nickname').textContent = prof.nickname;
+  document.getElementById('fb-content').value = '';
+  document.getElementById('fb-status').className = 'fb-status';
+  document.getElementById('fb-status').textContent = '';
+  document.getElementById('feedback-modal').classList.add('active');
+  setTimeout(()=>document.getElementById('fb-content').focus(),100);
+}
+function closeFeedback(){
+  document.getElementById('feedback-modal').classList.remove('active');
+}
+function submitFeedback(){
+  const content = document.getElementById('fb-content').value.trim();
+  if(!content){
+    showFbStatus('请输入反馈内容', 'error');
+    return;
+  }
+  if(content.length > 2000){
+    showFbStatus('反馈内容太长（最多 2000 字）', 'error');
+    return;
+  }
+  const prof = getPortalProfile();
+  const id = getPlayerId();
+  const category = document.getElementById('fb-category').value;
+  const catLabel = {bug:'Bug',suggestion:'建议',praise:'表扬',other:'其他'}[category] || category;
+  const fb = {
+    id,
+    nickname: prof.nickname,
+    timestamp: new Date().toISOString(),
+    category,
+    catLabel,
+    content,
+  };
+  const list = getFeedbackList();
+  list.push(fb);
+  saveFeedbackList(list);
+  // 同时生成邮件草稿
+  const subject = `[Thawpaw Games 反馈] ${catLabel} · ${id}`;
+  const body = `玩家ID：${id}\n昵称：${prof.nickname}\n类型：${catLabel}\n时间：${fb.timestamp}\n\n反馈内容：\n${content}`;
+  const mailto = `mailto:${FB_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  showFbStatus('✅ 已保存到本地！', 'success');
+  document.getElementById('fb-status').innerHTML =
+    `✅ 已保存到本地！<br><a href="${mailto}" style="color:#48c6ef;text-decoration:underline;display:inline-block;margin-top:8px;padding:8px 16px;background:rgba(72,198,239,.15);border-radius:6px">📧 点击这里打开邮件草稿发给作者</a><br><span style="font-size:11px;opacity:.7">（点上面按钮就能发邮件给作者）</span>`;
+  setTimeout(()=>{
+    if(document.getElementById('feedback-modal').classList.contains('active')){
+      closeFeedback();
+    }
+  }, 8000);
+}
+function showFbStatus(msg, type){
+  const el = document.getElementById('fb-status');
+  el.className = 'fb-status ' + type;
+  el.textContent = msg;
+}
+
+// ===== INBOX PAGE =====
+function initFeedbackPage(){
+  const params = new URLSearchParams(location.search);
+  if(params.get('feedback') === 'inbox'){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-inbox').classList.add('active');
+    renderInbox();
+  }
+}
+function renderInbox(){
+  const list = getFeedbackList().sort((a,b)=>b.timestamp.localeCompare(a.timestamp));
+  const statsEl = document.getElementById('fb-stats');
+  const listEl = document.getElementById('fb-list');
+  if(list.length === 0){
+    statsEl.innerHTML = '';
+    listEl.innerHTML = `<div class="fb-empty"><div class="emoji">📭</div><div>还没有反馈哦</div></div>`;
+    return;
+  }
+  const cats = list.reduce((acc,f)=>{acc[f.category]=(acc[f.category]||0)+1;return acc;},{});
+  statsEl.innerHTML = `
+    <span>总计 <b>${list.length}</b> 条</span>
+    ${cats.bug?`<span>🐛 Bug <b>${cats.bug}</b></span>`:''}
+    ${cats.suggestion?`<span>💡 建议 <b>${cats.suggestion}</b></span>`:''}
+    ${cats.praise?`<span>⭐ 表扬 <b>${cats.praise}</b></span>`:''}
+    ${cats.other?`<span>💬 其他 <b>${cats.other}</b></span>`:''}
+    <span>独立玩家 <b>${new Set(list.map(f=>f.id)).size}</b> 人</span>
+  `;
+  listEl.innerHTML = list.map((f,i)=>{
+    const date = new Date(f.timestamp);
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    return `
+    <div class="fb-item">
+      <button class="fb-item-del" onclick="deleteFeedback(${i})" title="删除">×</button>
+      <div class="fb-item-head">
+        <span class="fb-item-id">·${f.id}（${f.nickname}）</span>
+        <span class="fb-item-time">${dateStr}</span>
+      </div>
+      <div class="fb-item-head" style="margin-bottom:8px">
+        <span class="fb-item-cat ${f.category}">${f.catLabel || f.category}</span>
+      </div>
+      <div class="fb-item-content">${escapeHtml(f.content)}</div>
+    </div>`;
+  }).join('');
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function deleteFeedback(idx){
+  if(!confirm('删除这条反馈？')) return;
+  const list = getFeedbackList();
+  list.splice(idx,1);
+  saveFeedbackList(list);
+  renderInbox();
+}
+function clearAllFeedback(){
+  if(!confirm('清空所有反馈？此操作不可恢复！')) return;
+  if(!confirm('真的清空？')) return;
+  saveFeedbackList([]);
+  renderInbox();
+}
+
+// ===== EXPORT =====
+function exportFeedbackMd(){
+  const list = getFeedbackList();
+  if(list.length === 0){ alert('还没有反馈'); return; }
+  let md = `# 游客反馈\n\n导出于：${new Date().toLocaleString('zh-CN')}\n总计：${list.length} 条\n\n`;
+  list.forEach(f=>{
+    md += `- \`${f.id}\`（${f.nickname}）— [${f.catLabel||f.category}] ${new Date(f.timestamp).toLocaleString('zh-CN')}\n`;
+    md += `  > ${f.content.replace(/\n/g,'\n  > ')}\n\n`;
+  });
+  download('游客反馈_' + dateStamp() + '.md', md);
+}
+function exportFeedbackTxt(){
+  const list = getFeedbackList();
+  if(list.length === 0){ alert('还没有反馈'); return; }
+  let txt = `游客反馈\n\n导出于：${new Date().toLocaleString('zh-CN')}\n总计：${list.length} 条\n\n`;
+  list.forEach(f=>{
+    txt += `·${f.id}（${f.nickname}）：${f.content}\n  [${f.catLabel||f.category}] ${new Date(f.timestamp).toLocaleString('zh-CN')}\n\n`;
+  });
+  download('游客反馈_' + dateStamp() + '.txt', txt);
+}
+function copyFeedbackForWord(){
+  const list = getFeedbackList();
+  if(list.length === 0){ alert('还没有反馈'); return; }
+  // 按用户的 Word 格式：·XXXXXXXX（玩家ID）：反馈内容
+  let text = list.map(f=>`·${f.id}（${f.nickname}）：${f.content.replace(/\n/g,' ')}`).join('\n');
+  const header = `# 游客反馈（导出于 ${new Date().toLocaleString('zh-CN')}，共 ${list.length} 条）\n\n`;
+  const footer = `\n\n---\n分类统计：\n${Object.entries(list.reduce((a,f)=>{a[f.catLabel||f.category]=(a[f.catLabel||f.category]||0)+1;return a;},{})).map(([k,v])=>`  ${k}: ${v}`).join('\n')}\n`;
+  const full = header + text + footer;
+  navigator.clipboard.writeText(full).then(()=>{
+    alert('✅ 已复制到剪贴板！\n\n格式：\n·XXXXXXXX（玩家ID）：反馈内容\n\n可以直接粘贴到 Word 文件里。');
+  }).catch(()=>{
+    prompt('复制下面的内容到剪贴板：', full);
+  });
+}
+function download(name, content){
+  const blob = new Blob([content], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+function dateStamp(){
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// Click outside modal to close
+document.addEventListener('click', e=>{
+  if(e.target.id === 'feedback-modal') closeFeedback();
+});
+
+// Init inbox if URL has ?feedback=inbox
+initFeedbackPage();
 </script>
 </body>
 </html>
