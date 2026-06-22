@@ -3,18 +3,33 @@
  * 在每个页面引入：<script src="track.js" defer></script>
  * 自动记录：玩家 ID + 当前页面 + 事件类型
  * 调用方式：window.thawpawTrack('view') 或 window.thawpawTrack('play')
+ *
+ * 后端：Cloudflare Worker (https://tpg-hq.wangjieqi.workers.dev/track)
+ * URL 配置在 localStorage key 'tpgCfBackendUrl'
  */
 (function () {
-  // GAS URL 由 admin.html 部署时填入（通过 localStorage 共享）
-  function getGasUrl() {
-    try { return localStorage.getItem('thawpawGasUrl') || ''; } catch (e) { return ''; }
+  var CF_BACKEND_KEY = 'tpgCfBackendUrl';
+  var DEFAULT_CF_URL = 'https://tpg-hq.wangjieqi.workers.dev';
+
+  function getBackendBase() {
+    try {
+      var u = localStorage.getItem(CF_BACKEND_KEY) || DEFAULT_CF_URL;
+      return u.replace(/\/+$/, '');
+    } catch (e) {
+      return DEFAULT_CF_URL;
+    }
   }
 
   function getPlayerId() {
     try {
-      var id = localStorage.getItem('thawpawPlayerId');
+      var id = localStorage.getItem('thawpawActiveId');
       if (!id) {
-        id = String(Math.floor(10000000 + Math.random() * 89999999));
+        // 老代码兼容：尝试 thawpawPlayerId
+        id = localStorage.getItem('thawpawPlayerId');
+      }
+      if (!id) {
+        // 没有活动 ID，生成一个（不应该发生在新版 portal 里）
+        id = String(Math.floor(10000000 + Math.random() * 90000000));
         localStorage.setItem('thawpawPlayerId', id);
       }
       return id;
@@ -40,26 +55,24 @@
     if (path.indexOf('dungeon') >= 0) return 'dungeon';
     if (path.indexOf('starclan') >= 0) return 'starclan';
     if (path.indexOf('warrior') >= 0) return 'warrior';
-    if (path.indexOf('admin') >= 0) return 'admin';
+    if (path.indexOf('admin') >= 0 || path.indexOf('hq') >= 0) return 'admin';
     return path.split('/').pop() || 'unknown';
   }
 
   function send(evType) {
-    var url = getGasUrl();
-    if (!url) return; // GAS 未配置时不发请求
+    var url = getBackendBase() + '/track';
     var payload = {
-      action: 'track',
       id: getPlayerId(),
       page: getPageName(),
-      event: evType,
+      event: evType || 'view',
       sessionId: getSessionId()
     };
     try {
       fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-        mode: 'no-cors',
+        mode: 'cors',
         keepalive: true
       }).catch(function () {});
     } catch (e) {}

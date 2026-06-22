@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPG 总部 · Thawpaw Games HQ</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;
+  --card:#f8f9fa;
+  --card2:#f1f3f5;
+  --border:#e0e0e0;
+  --border2:#d0d5dd;
+  --accent:#4263eb;
+  --accent-light:#edf2ff;
+  --green:#40c057;
+  --gold:#f59f00;
+  --red:#fa5252;
+  --text:#1a1a2e;
+  --text2:#6c757d;
+  --dim:#adb5bd;
+  --radius:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+  --shadow-lg:0 4px 24px rgba(0,0,0,.1);
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,'PingFang SC','Helvetica Neue',sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+}
+
+/* ── Login Screen ── */
+.login-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:2rem;text-align:center;
+}
+.login-logo{
+  font-size:2.4rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.3rem;
+  background:linear-gradient(135deg,#4263eb 0%,#7950f2 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.login-sub{color:var(--text2);font-size:.95rem;margin-bottom:2rem}
+.login-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:2rem;max-width:380px;width:100%;box-shadow:var(--shadow);
+}
+.login-card h2{font-size:1.1rem;margin-bottom:1.2rem;font-weight:700}
+.login-input{
+  width:100%;padding:12px 14px;border:2px solid var(--border2);border-radius:8px;
+  font-size:18px;letter-spacing:.08em;text-align:center;outline:none;
+  transition:border-color .2s;font-family:'Courier New',monospace;
+}
+.login-input:focus{border-color:var(--accent)}
+.login-input::placeholder{color:var(--dim);letter-spacing:.04em;font-size:15px}
+.login-btn{
+  width:100%;margin-top:1rem;padding:12px;border:none;border-radius:8px;
+  background:var(--accent);color:#fff;font-size:15px;font-weight:600;
+  cursor:pointer;transition:background .2s,transform .1s;
+}
+.login-btn:hover{background:#3b5bdb}
+.login-btn:active{transform:scale(.98)}
+.login-btn:disabled{background:var(--dim);cursor:not-allowed}
+.login-error{
+  margin-top:1rem;padding:10px 14px;background:#fff5f5;border:1px solid #ffd0d0;
+  border-radius:8px;color:var(--red);font-size:.85rem;display:none;
+}
+.login-error.show{display:block}
+.login-hint{margin-top:1rem;font-size:.78rem;color:var(--dim)}
+
+/* Nickname confirm step */
+.nick-step{display:none;margin-top:1.2rem;text-align:left}
+.nick-step.show{display:block}
+.nick-step label{display:block;font-size:.8rem;color:var(--text2);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.nick-step input{
+  width:100%;padding:12px 14px;border:2px solid var(--border2);border-radius:8px;
+  font-size:15px;outline:none;transition:border-color .2s;
+}
+.nick-step input:focus{border-color:var(--accent)}
+.nick-step .nick-hint{font-size:.75rem;color:var(--dim);margin-top:6px}
+.nick-btns{display:flex;gap:.5rem;margin-top:.8rem}
+.nick-btns button{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.nick-btns .btn-confirm{background:var(--accent);color:#fff}
+.nick-btns .btn-confirm:hover{background:#3b5bdb}
+.nick-btns .btn-cancel{background:var(--card2);color:var(--text2)}
+.nick-btns .btn-cancel:hover{background:#e9ecef}
+
+/* ── Dashboard ── */
+.dashboard{display:none}
+.dashboard.active{display:block}
+
+/* Top bar */
+.top-bar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:10px 20px;display:flex;align-items:center;gap:12px;min-height:56px;
+}
+.top-logo{
+  font-size:1.1rem;font-weight:800;letter-spacing:-.02em;
+  background:linear-gradient(135deg,#4263eb,#7950f2);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.top-logo small{-webkit-text-fill-color:var(--text2);font-weight:400;font-size:.75rem;margin-left:.3rem}
+.top-spacer{flex:1}
+.user-badge{
+  display:flex;align-items:center;gap:8px;padding:6px 14px;
+  background:var(--accent-light);border-radius:99px;font-size:.85rem;font-weight:600;
+}
+.user-badge .admin-tag{
+  background:var(--accent);color:#fff;padding:2px 8px;border-radius:99px;
+  font-size:.7rem;font-weight:700;letter-spacing:.03em;
+}
+.logout-btn{
+  padding:6px 14px;border:1px solid var(--border2);border-radius:8px;
+  background:#fff;color:var(--text2);font-size:.82rem;cursor:pointer;
+  transition:all .2s;
+}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* Content */
+.content{max-width:1100px;margin:0 auto;padding:1.5rem 2rem 3rem}
+
+/* Tabs */
+.tabs{
+  display:flex;gap:.5rem;margin-bottom:1.5rem;border-bottom:2px solid var(--border);
+  padding-bottom:0;overflow-x:auto;
+}
+.tab{
+  padding:10px 18px;border:none;background:none;cursor:pointer;
+  font-size:.95rem;font-weight:600;color:var(--text2);
+  border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;
+  transition:all .2s;
+}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* Tab panels */
+.panel{display:none}
+.panel.active{display:block}
+
+/* Stat cards */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1.2rem;box-shadow:var(--shadow);
+}
+.stat-card .stat-label{font-size:.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.stat-card .stat-value{font-size:1.8rem;font-weight:800;margin-top:.3rem;color:var(--text)}
+.stat-card .stat-sub{font-size:.75rem;color:var(--dim);margin-top:.2rem}
+
+/* Table */
+.table-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow);
+}
+.table-header{
+  padding:1rem 1.2rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.table-header h3{font-size:1rem;font-weight:700}
+table{width:100%;border-collapse:collapse}
+th{
+  text-align:left;padding:10px 14px;font-size:.78rem;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--text2);font-weight:700;
+  border-bottom:1px solid var(--border);background:var(--card2);
+}
+td{padding:10px 14px;font-size:.9rem;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--card2)}
+.game-name{font-weight:600}
+.mono{font-family:'Courier New',monospace;letter-spacing:.03em}
+
+/* Bar chart */
+.bar-row{
+  display:flex;align-items:center;gap:10px;padding:8px 0;
+}
+.bar-label{width:100px;font-size:.85rem;font-weight:600;flex-shrink:0}
+.bar-track{flex:1;height:24px;background:var(--card2);border-radius:6px;overflow:hidden;position:relative}
+.bar-fill{
+  height:100%;border-radius:6px;
+  background:linear-gradient(90deg,#4263eb,#7950f2);
+  transition:width .6s cubic-bezier(.4,0,.2,1);
+  display:flex;align-items:center;justify-content:flex-end;
+  padding-right:8px;color:#fff;font-size:.75rem;font-weight:700;
+}
+
+/* Export button */
+.export-btn{
+  padding:8px 16px;border:none;border-radius:8px;
+  background:var(--green);color:#fff;font-size:.85rem;font-weight:600;
+  cursor:pointer;transition:background .2s;
+}
+.export-btn:hover{background:#2f9e44}
+
+/* Admin management */
+.admin-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1.2rem;box-shadow:var(--shadow);margin-bottom:1rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.admin-info{display:flex;align-items:center;gap:12px}
+.admin-avatar{
+  width:44px;height:44px;border-radius:50%;background:var(--accent-light);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.admin-details .admin-name{font-weight:700;font-size:.95rem}
+.admin-details .admin-id{font-size:.8rem;color:var(--text2);font-family:'Courier New',monospace}
+.admin-role{
+  padding:3px 10px;border-radius:99px;font-size:.72rem;font-weight:700;
+}
+.admin-role.super{background:#fff4e6;color:#e8590c}
+.admin-role.sub{background:var(--accent-light);color:var(--accent)}
+.remove-admin-btn{
+  padding:6px 12px;border:1px solid var(--border2);border-radius:6px;
+  background:#fff;color:var(--red);font-size:.8rem;cursor:pointer;
+}
+.remove-admin-btn:hover{background:#fff5f5;border-color:var(--red)}
+
+.add-admin-section{
+  background:var(--card);border:2px dashed var(--border2);border-radius:var(--radius);
+  padding:1.5rem;margin-top:1.5rem;
+}
+.add-admin-section h3{font-size:.95rem;font-weight:700;margin-bottom:1rem}
+.add-admin-row{display:flex;gap:.5rem;flex-wrap:wrap}
+.add-admin-row input{
+  flex:1;min-width:120px;padding:10px 12px;border:2px solid var(--border2);
+  border-radius:8px;font-size:14px;outline:none;transition:border-color .2s;
+}
+.add-admin-row input:focus{border-color:var(--accent)}
+.add-admin-row button{
+  padding:10px 18px;border:none;border-radius:8px;
+  background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;
+}
+.add-admin-row button:hover{background:#3b5bdb}
+
+/* Feedback list */
+.feedback-item{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1rem 1.2rem;margin-bottom:.8rem;box-shadow:var(--shadow);
+}
+.feedback-item .fb-header{display:flex;align-items:center;gap:8px;margin-bottom:.4rem;font-size:.8rem;color:var(--text2)}
+.feedback-item .fb-cat{
+  padding:2px 8px;border-radius:99px;font-size:.72rem;font-weight:600;
+  background:var(--accent-light);color:var(--accent);
+}
+.feedback-item .fb-content{font-size:.9rem;line-height:1.5;color:var(--text)}
+
+/* Gas url config */
+.gas-config{
+  background:#fffbe6;border:1px solid #ffe066;border-radius:8px;
+  padding:.8rem 1rem;margin-bottom:1rem;font-size:.82rem;color:#866a00;
+  display:flex;align-items:center;gap:8px;
+}
+.gas-config input{
+  flex:1;padding:6px 10px;border:1px solid #ffe066;border-radius:6px;
+  font-size:.8rem;font-family:monospace;
+}
+.gas-config button{
+  padding:6px 12px;border:none;border-radius:6px;
+  background:#fab005;color:#fff;font-size:.8rem;font-weight:600;cursor:pointer;
+}
+
+/* Empty state */
+.empty-state{text-align:center;padding:3rem;color:var(--dim)}
+.empty-state .empty-icon{font-size:3rem;margin-bottom:.5rem}
+
+/* Responsive */
+@media(max-width:640px){
+  .content{padding:1rem}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .bar-label{width:70px;font-size:.78rem}
+  .top-logo small{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div class="login-screen" id="login-screen">
+  <div class="login-logo">🐾 TPG 总部</div>
+  <div class="login-sub">Thawpaw Games Headquarters</div>
+  <div class="login-card">
+    <h2>🔑 输入 8 位游戏 ID 登录</h2>
+    <input type="text" class="login-input" id="login-id-input" placeholder="8 位数字 ID" maxlength="8" autocomplete="off">
+    <button class="login-btn" id="login-btn" onclick="hqLogin()">登录</button>
+    <div class="login-error" id="login-error"></div>
+
+    <!-- Step 2: Nickname confirmation -->
+    <div class="nick-step" id="nick-step">
+      <label>确认昵称</label>
+      <input type="text" id="nick-input" placeholder="输入该 ID 对应的昵称" maxlength="16" autocomplete="off">
+      <div class="nick-hint">请输入此 ID 注册时使用的昵称以验证身份</div>
+      <div class="nick-btns">
+        <button class="btn-cancel" onclick="cancelNick()">返回</button>
+        <button class="btn-confirm" onclick="confirmNick()">确认登录</button>
+      </div>
+    </div>
+  </div>
+  <div class="login-hint">© 2026 Thawpaw Games · 管理员入口</div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="dashboard" id="dashboard">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="top-logo">🐾 TPG 总部 <small>Thawpaw Games HQ</small></div>
+    <div class="top-spacer"></div>
+    <div class="user-badge" id="user-badge"></div>
+    <button class="logout-btn" onclick="openProjectSettings()" title="切换后端项目">⚙️</button>
+    <button class="logout-btn" onclick="hqLogout()">退出</button>
+  </div>
+
+  <div class="content">
+    <!-- Cloudflare Worker URL config -->
+    <div class="gas-config" id="cf-config" style="display:none">
+      <span>⚙️ 后端 URL（当前：<code id="cf-current">tpg-hq.wangjieqi.workers.dev</code>）：</span>
+      <input type="text" id="cf-url-input" placeholder="https://tpg-hq.wangjieqi.workers.dev">
+      <button onclick="saveBackendUrl()">保存</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="overview" onclick="switchTab('overview')">📊 概览</button>
+      <button class="tab" data-tab="games" onclick="switchTab('games')">🎮 游戏数据</button>
+      <button class="tab" data-tab="feedback" onclick="switchTab('feedback')">💬 反馈</button>
+      <button class="tab" data-tab="admins" onclick="switchTab('admins')" id="admin-tab">👥 管理员</button>
+    </div>
+
+    <!-- ===== Overview Tab ===== -->
+    <div class="panel active" id="panel-overview">
+      <div class="stats-grid" id="overview-stats">
+        <div class="stat-card">
+          <div class="stat-label">总浏览量 PV</div>
+          <div class="stat-value" id="ov-pv">—</div>
+          <div class="stat-sub">所有页面</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">独立访客 UV</div>
+          <div class="stat-value" id="ov-uv">—</div>
+          <div class="stat-sub">不同玩家 ID</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">游戏启动次数</div>
+          <div class="stat-value" id="ov-play">—</div>
+          <div class="stat-sub">play 事件总计</div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h3>📈 各页面浏览量排行</h3>
+        </div>
+        <div style="padding:1.2rem" id="ov-bars">
+          <div class="empty-state"><div class="empty-icon">📭</div>加载中...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Games Tab ===== -->
+    <div class="panel" id="panel-games">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>🎮 各游戏数据</h3>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>游戏</th>
+              <th>浏览量 PV</th>
+              <th>访客数 UV</th>
+              <th>游玩次数</th>
+            </tr>
+          </thead>
+          <tbody id="games-tbody">
+            <tr><td colspan="4" style="text-align:center;color:var(--dim)">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== Feedback Tab ===== -->
+    <div class="panel" id="panel-feedback">
+      <div class="table-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <h3>💬 玩家反馈</h3>
+        <div style="display:flex;gap:.5rem">
+          <button class="export-btn" onclick="exportFeedback('json')">📥 导出 JSON</button>
+          <button class="export-btn" onclick="exportFeedback('csv')" style="background:var(--accent)">📥 导出 CSV</button>
+        </div>
+      </div>
+      <div id="feedback-list">
+        <div class="empty-state"><div class="empty-icon">💬</div>加载中...</div>
+      </div>
+    </div>
+
+    <!-- ===== Admins Tab ===== -->
+    <div class="panel" id="panel-admins">
+      <div class="table-card" style="margin-bottom:1.5rem">
+        <div class="table-header"><h3>👥 管理员列表</h3></div>
+        <div id="admin-list" style="padding:1rem">
+          <div class="empty-state"><div class="empty-icon">👥</div>加载中...</div>
+        </div>
+      </div>
+
+      <!-- Add sub-admin (super admin only) -->
+      <div class="add-admin-section" id="add-admin-section">
+        <h3>➕ 添加副管理员</h3>
+        <div class="add-admin-row">
+          <input type="text" id="new-admin-id" placeholder="8 位 ID" maxlength="8">
+          <input type="text" id="new-admin-nick" placeholder="昵称" maxlength="16">
+          <button onclick="addSubAdmin()">添加</button>
+        </div>
+        <div style="font-size:.78rem;color:var(--dim);margin-top:.5rem">仅超级管理员可操作</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============================
+//  TPG HQ Admin Frontend
+// ============================
+
+const SUPER_ADMIN_ID = '94568945';
+const CF_BACKEND_KEY = 'tpgCfBackendUrl';
+const DEFAULT_CF_URL = 'https://tpg-hq.wangjieqi.workers.dev';
+let backendUrl = localStorage.getItem(CF_BACKEND_KEY) || DEFAULT_CF_URL;
+let session = null; // { id, nickname, role }
+
+function getBackendBase(){
+  return backendUrl.replace(/\/+$/, '');
+}
+
+// ── Init ──
+(function init(){
+  // Restore session
+  const saved = sessionStorage.getItem('tpgHqSession');
+  if(saved){
+    try{
+      session = JSON.parse(saved);
+      showDashboard();
+    }catch(e){ sessionStorage.removeItem('tpgHqSession'); }
+  }
+
+  // Login input: digits only
+  const idInput = document.getElementById('login-id-input');
+  idInput.addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/\D/g,'').slice(0,8);
+  });
+  idInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter') hqLogin();
+  });
+  document.getElementById('nick-input').addEventListener('keydown', e => {
+    if(e.key === 'Enter') confirmNick();
+  });
+})();
+
+// ── Backend URL config ──
+function openProjectSettings(){
+  const cur = document.getElementById('cf-current');
+  if(cur) cur.textContent = backendUrl;
+  const input = document.getElementById('cf-url-input');
+  if(input) input.value = backendUrl;
+  const box = document.getElementById('cf-config');
+  if(box) box.style.display = 'flex';
+}
+function saveBackendUrl(){
+  const val = document.getElementById('cf-url-input').value.trim();
+  if(!val){ alert('请输入 Cloudflare Worker URL'); return; }
+  if(!/^https:\/\//.test(val)){ alert('URL 必须以 https:// 开头'); return; }
+  backendUrl = val;
+  localStorage.setItem(CF_BACKEND_KEY, val);
+  document.getElementById('cf-config').style.display = 'none';
+  loadStats(); loadFeedback();
+  if(session && (session.role === 'super' || session.role === 'admin')) loadAdmins();
+}
+
+// ── API helpers ──
+function apiGet(fnName, params){
+  const url = getBackendBase() + '/' + fnName + (params ? '?' + new URLSearchParams(params).toString() : '');
+  return fetch(url).then(r => r.json());
+}
+function apiPost(fnName, data){
+  return fetch(getBackendBase() + '/' + fnName, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  }).then(r => r.json());
+}
+
+// ── Login flow ──
+let pendingId = null;
+
+function hqLogin(){
+  hideLoginError();
+  const id = document.getElementById('login-id-input').value.trim();
+  if(!id){ showLoginError('请输入 ID'); return; }
+  if(!/^\d{8}$/.test(id)){ showLoginError('ID 必须是 8 位数字'); return; }
+  // Step 1: lookup ID
+  pendingId = id;
+  document.getElementById('login-btn').disabled = true;
+  document.getElementById('login-btn').textContent = '查询中...';
+
+  // Try backend lookup first
+  apiGet('lookup', { id: id }).then(res => {
+    document.getElementById('login-btn').disabled = false;
+    document.getElementById('login-btn').textContent = '登录';
+
+    if(res.ok && res.found){
+      // ID exists in backend — ask for nickname
+      showNickStep();
+    } else if(res.ok && !res.found){
+      // Not in backend — check localStorage (offline mode)
+      const players = JSON.parse(localStorage.getItem('thawpawPlayers') || '{}');
+      if(players[id]){
+        showNickStep();
+      } else {
+        showLoginError('此 ID 不在玩家表中。如果是新管理员，请先在 TPG 游戏门户注册。');
+      }
+    } else {
+      showLoginError(res.error || '查询失败');
+    }
+  }).catch(err => {
+    document.getElementById('login-btn').disabled = false;
+    document.getElementById('login-btn').textContent = '登录';
+    // Network error — fallback to localStorage
+    const players = JSON.parse(localStorage.getItem('thawpawPlayers') || '{}');
+    if(players[id]){
+      showNickStep();
+    } else {
+      showLoginError('无法连接后端，且本地无此 ID 记录');
+    }
+  });
+}
+
+function showNickStep(){
+  document.getElementById('nick-step').classList.add('show');
+  document.getElementById('nick-input').value = '';
+  document.getElementById('nick-input').focus();
+}
+function cancelNick(){
+  document.getElementById('nick-step').classList.remove('show');
+  pendingId = null;
+}
+function confirmNick(){
+  const nick = document.getElementById('nick-input').value.trim();
+  if(!nick){ showLoginError('请输入昵称'); return; }
+
+  // Try backend verify
+  apiPost('verify', { id: pendingId, nickname: nick }).then(res => {
+    if(res.ok){
+      session = { id: res.id, nickname: res.nickname, role: res.role };
+      sessionStorage.setItem('tpgHqSession', JSON.stringify(session));
+      document.getElementById('nick-step').classList.remove('show');
+      showDashboard();
+    } else {
+      // Backend says no — fallback to localStorage
+      const players = JSON.parse(localStorage.getItem('thawpawPlayers') || '{}');
+      if(players[pendingId] && players[pendingId].nickname === nick){
+        // Local match
+        let role = 'player';
+        if(pendingId === SUPER_ADMIN_ID) role = 'super';
+        session = { id: pendingId, nickname: nick, role: role };
+        sessionStorage.setItem('tpgHqSession', JSON.stringify(session));
+        document.getElementById('nick-step').classList.remove('show');
+        showDashboard();
+      } else {
+        showLoginError('昵称与 ID 不匹配');
+      }
+    }
+  }).catch(err => {
+    // Network error — localStorage fallback
+    const players = JSON.parse(localStorage.getItem('thawpawPlayers') || '{}');
+    if(players[pendingId] && players[pendingId].nickname === nick){
+      let role = 'player';
+      if(pendingId === SUPER_ADMIN_ID) role = 'super';
+      session = { id: pendingId, nickname: nick, role: role };
+      sessionStorage.setItem('tpgHqSession', JSON.stringify(session));
+      document.getElementById('nick-step').classList.remove('show');
+      showDashboard();
+    } else {
+      showLoginError('无法验证：后端不可达，且本地昵称不匹配');
+    }
+  });
+}
+
+function showLoginError(msg){
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function hideLoginError(){ document.getElementById('login-error').classList.remove('show'); }
+
+// ── Dashboard ──
+function showDashboard(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').classList.add('active');
+
+  // User badge
+  const isAdmin = session.role === 'super' || session.role === 'admin';
+  const displayName = isAdmin ? '管理员' + session.nickname : session.nickname;
+  const badge = document.getElementById('user-badge');
+  if(isAdmin){
+    badge.innerHTML = '<span class="admin-tag">' + (session.role === 'super' ? '超级' : '副') + '</span>' + escapeHtml(displayName) + ' · <span class="mono">' + session.id + '</span>';
+  } else {
+    badge.innerHTML = escapeHtml(session.nickname) + ' · <span class="mono">' + session.id + '</span>';
+  }
+
+  // Admin tab visibility (only admins can see)
+  const adminTab = document.getElementById('admin-tab');
+  if(isAdmin){
+    adminTab.style.display = '';
+  } else {
+    adminTab.style.display = 'none';
+    // Non-admin: hide add-admin section too
+  }
+
+  // Add admin section: super only
+  const addSection = document.getElementById('add-admin-section');
+  addSection.style.display = (session.role === 'super') ? '' : 'none';
+
+  // Load data
+  loadStats();
+  loadFeedback();
+  if(isAdmin) loadAdmins();
+}
+
+function hqLogout(){
+  sessionStorage.removeItem('tpgHqSession');
+  session = null;
+  document.getElementById('dashboard').classList.remove('active');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-id-input').value = '';
+  document.getElementById('nick-step').classList.remove('show');
+  hideLoginError();
+}
+
+// ── Tabs ──
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.tab[data-tab="'+name+'"]').classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ── Stats ──
+function loadStats(){
+  apiGet('stats').then(res => {
+    if(!res.ok) return;
+    const s = res;
+    document.getElementById('ov-pv').textContent = s.total.pv || 0;
+    document.getElementById('ov-uv').textContent = s.total.uv || 0;
+    document.getElementById('ov-play').textContent = s.total.play || 0;
+
+    // Bar chart
+    const bars = document.getElementById('ov-bars');
+    const pages = Object.entries(s.byPage).sort((a,b) => b[1].pv - a[1].pv);
+    if(pages.length === 0){
+      bars.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div>暂无数据</div>';
+      return;
+    }
+    const maxPv = Math.max(...pages.map(p => p[1].pv));
+    const pageNames = {
+      portal:'🏛️ 门户首页', snake:'🐍 贪吃蛇', moonstone:'🔮 猫武士大冒险',
+      dungeon:'⚔️ Dungeon', starclan:'⭐ StarClan', warrior:'🐱 Warrior',
+      admin:'🏢 总部'
+    };
+    bars.innerHTML = pages.map(([page, data]) => {
+      const pct = maxPv > 0 ? Math.round(data.pv / maxPv * 100) : 0;
+      const name = pageNames[page] || page;
+      return '<div class="bar-row">' +
+        '<div class="bar-label">' + escapeHtml(name) + '</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%">' + data.pv + ' PV · ' + data.uv + ' UV</div></div>' +
+      '</div>';
+    }).join('');
+
+    // Games table
+    const gameIds = ['snake','moonstone','dungeon'];
+    const tbody = document.getElementById('games-tbody');
+    tbody.innerHTML = gameIds.map(gid => {
+      const d = s.byPage[gid] || {pv:0, uv:0, play:0};
+      const names = {snake:'🐍 Snake Game', moonstone:'🔮 猫武士大冒险', dungeon:'⚔️ Dungeon Explore'};
+      return '<tr><td class="game-name">' + names[gid] + '</td>' +
+        '<td>' + d.pv + '</td><td>' + d.uv + '</td><td>' + d.play + '</td></tr>';
+    }).join('');
+    if(gameIds.every(gid => !s.byPage[gid])){
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--dim)">暂无游戏数据</td></tr>';
+    }
+  }).catch(err => {
+    console.error('stats error', err);
+  });
+}
+
+// ── Feedback ──
+function loadFeedback(){
+  apiGet('exportFeedback').then(res => {
+    if(!res.ok) return;
+    const list = res.feedback || [];
+    const el = document.getElementById('feedback-list');
+    if(list.length === 0){
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div>暂无反馈</div>';
+      return;
+    }
+    list.reverse(); // newest first
+    el.innerHTML = list.map(f => {
+      const time = f.time ? new Date(f.time).toLocaleString('zh-CN') : '';
+      return '<div class="feedback-item">' +
+        '<div class="fb-header">' +
+          '<span class="mono">' + escapeHtml(f.playerId) + '</span>' +
+          '<span>·</span>' +
+          '<span>' + escapeHtml(f.nickname) + '</span>' +
+          '<span class="fb-cat">' + escapeHtml(f.category) + '</span>' +
+          '<span style="margin-left:auto">' + time + '</span>' +
+        '</div>' +
+        '<div class="fb-content">' + escapeHtml(f.message) + '</div>' +
+      '</div>';
+    }).join('');
+  }).catch(err => {
+    document.getElementById('feedback-list').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div>加载失败</div>';
+  });
+}
+
+function exportFeedback(fmt){
+  apiGet('exportFeedback').then(res => {
+    if(!res.ok){ alert('导出失败'); return; }
+    const list = res.feedback || [];
+    if(list.length === 0){ alert('暂无反馈数据'); return; }
+
+    if(fmt === 'json'){
+      const blob = new Blob([JSON.stringify(list, null, 2)], {type:'application/json'});
+      downloadBlob(blob, 'tpg-feedback-' + dateStr() + '.json');
+    } else {
+      // CSV
+      const headers = ['Time','PlayerID','Nickname','Category','Message'];
+      const rows = list.map(f => [f.time, f.playerId, f.nickname, f.category, f.message]);
+      const csv = [headers, ...rows].map(r => r.map(c => '"' + String(c||'').replace(/"/g,'""') + '"').join(',')).join('\n');
+      const blob = new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8'});
+      downloadBlob(blob, 'tpg-feedback-' + dateStr() + '.csv');
+    }
+  }).catch(err => alert('导出失败：' + err.message));
+}
+
+function downloadBlob(blob, filename){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function dateStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+// ── Admin management ──
+function loadAdmins(){
+  apiGet('listAdmins').then(res => {
+    if(!res.ok) return;
+    const admins = res.admins || [];
+    const el = document.getElementById('admin-list');
+    if(admins.length === 0){
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div>暂无管理员</div>';
+      return;
+    }
+    el.innerHTML = admins.map(a => {
+      const isSuper = a.role === 'super';
+      const canRemove = session.role === 'super' && !isSuper;
+      return '<div class="admin-card">' +
+        '<div class="admin-info">' +
+          '<div class="admin-avatar">' + (isSuper ? '👑' : '🐾') + '</div>' +
+          '<div class="admin-details">' +
+            '<div class="admin-name">管理员' + escapeHtml(a.nickname) + '</div>' +
+            '<div class="admin-id">ID: ' + escapeHtml(a.id) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:.5rem">' +
+          '<span class="admin-role ' + (isSuper ? 'super' : 'sub') + '">' + (isSuper ? '超级管理员' : '副管理员') + '</span>' +
+          (canRemove ? '<button class="remove-admin-btn" onclick="removeSubAdmin(\'' + a.id + '\')">移除</button>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }).catch(err => {
+    document.getElementById('admin-list').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div>加载失败</div>';
+  });
+}
+
+function addSubAdmin(){
+  const id = document.getElementById('new-admin-id').value.trim();
+  const nick = document.getElementById('new-admin-nick').value.trim();
+  if(!id || !nick){ alert('请输入 ID 和昵称'); return; }
+  if(!/^\d{8}$/.test(id)){ alert('ID 必须是 8 位数字'); return; }
+  if(id === SUPER_ADMIN_ID){ alert('不能添加超级管理员为副管理员'); return; }
+
+  apiPost('addAdmin', {
+    id: session.id,
+    nickname: session.nickname,
+    targetId: id,
+    targetNickname: nick,
+    role: 'admin'
+  }).then(res => {
+    if(res.ok){
+      alert('✅ 已添加副管理员：' + nick);
+      document.getElementById('new-admin-id').value = '';
+      document.getElementById('new-admin-nick').value = '';
+      loadAdmins();
+    } else {
+      alert('❌ ' + (res.error || '添加失败'));
+    }
+  }).catch(err => alert('❌ 网络错误'));
+}
+
+function removeSubAdmin(targetId){
+  if(!confirm('确定移除副管理员 ' + targetId + '？')) return;
+  apiPost('removeAdmin', {
+    id: session.id,
+    nickname: session.nickname,
+    targetId: targetId
+  }).then(res => {
+    if(res.ok){
+      alert('✅ 已移除');
+      loadAdmins();
+    } else {
+      alert('❌ ' + (res.error || '移除失败'));
+    }
+  }).catch(err => alert('❌ 网络错误'));
+}
+
+// ── Utils ──
+function escapeHtml(s){
+  if(s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>
