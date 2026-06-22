@@ -625,11 +625,15 @@ function showDashboard(){
   loadStats();
   loadFeedback();
   if(isAdmin) loadAdmins();
+
+  // 🔔 启动反馈监控（自动弹通知）
+  startFeedbackWatcher();
 }
 
 function hqLogout(){
   sessionStorage.removeItem('tpgHqSession');
   session = null;
+  stopFeedbackWatcher();
   document.getElementById('dashboard').classList.remove('active');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-id-input').value = '';
@@ -694,29 +698,32 @@ function loadStats(){
 }
 
 // ── Feedback ──
+function renderFeedbackList(list){
+  const el = document.getElementById('feedback-list');
+  if(!list || list.length === 0){
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div>暂无反馈</div>';
+    return;
+  }
+  const sorted = [...list].sort((a,b) => (b.time||'').localeCompare(a.time||''));
+  el.innerHTML = sorted.map(f => {
+    const time = f.time ? new Date(f.time).toLocaleString('zh-CN') : '';
+    return '<div class="feedback-item">' +
+      '<div class="fb-header">' +
+        '<span class="mono">' + escapeHtml(f.playerId) + '</span>' +
+        '<span>·</span>' +
+        '<span>' + escapeHtml(f.nickname) + '</span>' +
+        '<span class="fb-cat">' + escapeHtml(f.category) + '</span>' +
+        '<span style="margin-left:auto">' + time + '</span>' +
+      '</div>' +
+      '<div class="fb-content">' + escapeHtml(f.message) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
 function loadFeedback(){
   apiGet('exportFeedback').then(res => {
     if(!res.ok) return;
-    const list = res.feedback || [];
-    const el = document.getElementById('feedback-list');
-    if(list.length === 0){
-      el.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div>暂无反馈</div>';
-      return;
-    }
-    list.reverse(); // newest first
-    el.innerHTML = list.map(f => {
-      const time = f.time ? new Date(f.time).toLocaleString('zh-CN') : '';
-      return '<div class="feedback-item">' +
-        '<div class="fb-header">' +
-          '<span class="mono">' + escapeHtml(f.playerId) + '</span>' +
-          '<span>·</span>' +
-          '<span>' + escapeHtml(f.nickname) + '</span>' +
-          '<span class="fb-cat">' + escapeHtml(f.category) + '</span>' +
-          '<span style="margin-left:auto">' + time + '</span>' +
-        '</div>' +
-        '<div class="fb-content">' + escapeHtml(f.message) + '</div>' +
-      '</div>';
-    }).join('');
+    renderFeedbackList(res.feedback || []);
   }).catch(err => {
     document.getElementById('feedback-list').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div>加载失败</div>';
   });
@@ -832,6 +839,172 @@ function escapeHtml(s){
   if(s == null) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
+// ════════════════════════════════════════
+//  🔔 反馈通知系统
+//  PWA / Dock 应用模式下自动弹原生通知
+// ════════════════════════════════════════
+const FB_POLL_INTERVAL = 30000; // 30 秒轮询
+const FB_SEEN_KEY = 'tpgFbSeenIds';
+let fbWatchTimer = null;
+let fbTabBadges = {}; // 页面可见性检测
+
+function startFeedbackWatcher(){
+  if(fbWatchTimer) return; // 已在跑
+
+  // 请求通知权限（PWA 模式下会弹系统权限框）
+  if('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
+
+  // 首次加载：标记当前所有反馈为已读（不弹旧通知）
+  apiGet('exportFeedback').then(res => {
+    if(res.ok && res.feedback){
+      const ids = res.feedback.map(f => f.id).join(' ');
+      localStorage.setItem(FB_SEEN_KEY, ids);
+    }
+    // 开始定时轮询
+    fbWatchTimer = setInterval(pollFeedback, FB_POLL_INTERVAL);
+    console.log('[TPG] 反馈监控已启动，每 30 秒检查一次');
+  }).catch(() => {
+    // 首次失败也启动定时器，等 worker 恢复
+    fbWatchTimer = setInterval(pollFeedback, FB_POLL_INTERVAL);
+  });
+}
+
+function stopFeedbackWatcher(){
+  if(fbWatchTimer){
+    clearInterval(fbWatchTimer);
+    fbWatchTimer = null;
+    console.log('[TPG] 反馈监控已停止');
+  }
+}
+
+function pollFeedback(){
+  if(!session) return; // 未登录
+  apiGet('exportFeedback').then(res => {
+    if(!res.ok || !res.feedback) return;
+
+    const seenRaw = localStorage.getItem(FB_SEEN_KEY) || '';
+    const seen = new Set(seenRaw.split(/\s+/).filter(Boolean));
+    const allIds = [];
+    const newItems = [];
+
+    for(const f of res.feedback){
+      allIds.push(f.id);
+      if(!seen.has(f.id)){
+        newItems.push(f);
+      }
+    }
+
+    // 更新已读列表
+    localStorage.setItem(FB_SEEN_KEY, allIds.join(' '));
+
+    if(newItems.length === 0) return;
+
+    // 🔔 有新反馈！
+    // 1. 刷新反馈列表 UI
+    renderFeedbackList(res.feedback);
+
+    // 2. 更新 tab 角标
+    const fbTab = document.querySelector('.tab[data-tab="feedback"]');
+    if(fbTab && !fbTab.classList.contains('active')){
+      fbTab.style.position = 'relative';
+      let badge = document.getElementById('fb-tab-badge');
+      if(!badge){
+        badge = document.createElement('span');
+        badge.id = 'fb-tab-badge';
+        badge.style.cssText = 'position:absolute;top:-2px;right:-6px;background:#fa5252;color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center';
+        fbTab.appendChild(badge);
+      }
+      badge.textContent = newItems.length;
+      badge.style.display = 'flex';
+    }
+
+    // 3. 弹系统通知
+    notifyNewFeedback(newItems);
+
+    // 4. 播放提示音
+    playBeep();
+  }).catch(() => {});
+}
+
+function notifyNewFeedback(items){
+  const count = items.length;
+  const first = items[0];
+  const nick = first.nickname || '匿名玩家';
+  const preview = (first.message || '').slice(0, 60);
+
+  let title, body;
+  if(count === 1){
+    title = '🐾 新反馈 · ' + nick;
+    body = preview;
+  } else {
+    title = '🐾 ' + count + ' 条新反馈';
+    body = nick + '：' + preview + '\n（还有 ' + (count - 1) + ' 条…）';
+  }
+
+  // Web Notification API（PWA / Dock 模式下弹原生 macOS 通知）
+  if('Notification' in window && Notification.permission === 'granted'){
+    try {
+      const n = new Notification(title, {
+        body: body,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐾</text></svg>',
+        tag: 'tpg-feedback',
+        badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐾</text></svg>'
+      });
+      n.onclick = function(){
+        window.focus();
+        switchTab('feedback');
+        n.close();
+      };
+      // 5 秒后自动关闭
+      setTimeout(() => n.close(), 5000);
+    } catch(e) {
+      console.warn('Notification error:', e);
+    }
+  }
+
+  // 同时更新页面标题（吸引注意）
+  const original = document.title.replace(/^\[\d+\]\s*/, '');
+  document.title = '[' + count + '] ' + original;
+}
+
+// 简单的提示音（用 Web Audio API，不需要音频文件）
+function playBeep(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880; // A5
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch(e) {}
+}
+
+// 切到反馈 tab 时清除角标
+const _origSwitchTab = switchTab;
+switchTab = function(name){
+  _origSwitchTab(name);
+  if(name === 'feedback'){
+    const badge = document.getElementById('fb-tab-badge');
+    if(badge) badge.style.display = 'none';
+    // 恢复标题
+    document.title = document.title.replace(/^\[\d+\]\s*/, '');
+  }
+};
+
+// 页面可见性：回到页面时立即检查一次
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden && session){
+    pollFeedback();
+  }
+});
 </script>
 </body>
 </html>
