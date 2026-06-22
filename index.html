@@ -803,16 +803,51 @@ function submitFeedback(){
     catLabel,
     content,
   };
+  // 存本地
   const list = getFeedbackList();
   list.push(fb);
   saveFeedbackList(list);
+
+  // 发送到后端
+  showFbStatus('发送中...', 'success');
+  try {
+    var cfBase = 'https://tpg-hq.icepaw.workers.dev';
+    try { var u = localStorage.getItem('tpgCfBackendUrl'); if(u) cfBase = u.replace(/\/+$/, ''); } catch(e){}
+    fetch(cfBase + '/addFeedback', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        id: id,
+        nickname: prof.nickname,
+        category: catLabel,
+        message: content
+      }),
+      mode: 'cors',
+      keepalive: true
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if(res.ok){
+        showFbStatus('✅ 反馈已发送到 TPG 总部！', 'success');
+      } else {
+        showFbStatus('⚠️ 后端返回错误，反馈已存本地', 'error');
+      }
+    }).catch(function(err){
+      // 后端不可达，仍然存本地
+      showFbStatus('⚠️ 无法连接后端，反馈已存本地', 'error');
+    });
+  } catch(e) {
+    showFbStatus('⚠️ 反馈已存本地', 'error');
+  }
+
   // 同时生成邮件草稿
   const subject = `[Thawpaw Games 反馈] ${catLabel} · ${id}`;
   const body = `玩家ID：${id}\n昵称：${prof.nickname}\n类型：${catLabel}\n时间：${fb.timestamp}\n\n反馈内容：\n${content}`;
   const mailto = `mailto:${FB_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  showFbStatus('✅ 已保存到本地！', 'success');
-  document.getElementById('fb-status').innerHTML =
-    `✅ 已保存到本地！<br><a href="${mailto}" style="color:#48c6ef;text-decoration:underline;display:inline-block;margin-top:8px;padding:8px 16px;background:rgba(72,198,239,.15);border-radius:6px">📧 点击这里打开邮件草稿发给作者</a><br><span style="font-size:11px;opacity:.7">（点上面按钮就能发邮件给作者）</span>`;
+  setTimeout(()=>{
+    var st = document.getElementById('fb-status');
+    if(st.classList.contains('success')){
+      st.innerHTML += '<br><span style="font-size:11px;opacity:.7">也可以发邮件给作者：</span> <a href="' + mailto + '" style="color:#48c6ef;text-decoration:underline">📧 邮件</a>';
+    }
+  }, 1200);
   setTimeout(()=>{
     if(document.getElementById('feedback-modal').classList.contains('active')){
       closeFeedback();
