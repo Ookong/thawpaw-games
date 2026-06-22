@@ -27,6 +27,29 @@ canvas#stars{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z
 .hero h1{font-size:2.6rem;font-weight:800;letter-spacing:-.03em;background:linear-gradient(135deg,#6c63ff 0%,#48c6ef 50%,#f857a6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem}
 .hero p{color:var(--silver);font-size:1.1rem;max-width:500px;margin:0 auto}
 
+/* ── Profile Page ── */
+.page{display:none}
+.page.active{display:block}
+.back-btn{position:relative;z-index:2;padding:14px 20px;font-size:22px;cursor:pointer;color:var(--silver);user-select:none;display:inline-block}
+.back-btn:hover{color:var(--text)}
+.profile-page{display:flex;flex-direction:column;align-items:center;padding:20px 16px 40px;max-width:400px;margin:0 auto;position:relative;z-index:1}
+.profile-page .big-avatar{width:110px;height:110px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:56px;border:3px solid var(--accent);cursor:pointer;transition:transform .2s}
+.profile-page .big-avatar:hover{transform:scale(1.04)}
+.profile-page .name-section{text-align:center;margin-top:18px}
+.profile-page .name-line{display:flex;align-items:center;justify-content:center;gap:8px}
+.profile-page .name-line .nickname{font-size:22px;font-weight:700;color:var(--text)}
+.profile-page .name-line .edit-btn{cursor:pointer;font-size:18px;opacity:.7;transition:opacity .2s,transform .2s;user-select:none}
+.profile-page .name-line .edit-btn:hover{opacity:1;transform:scale(1.15)}
+.profile-page .player-id{color:var(--text2);font-size:14px;margin-top:6px;font-family:monospace;letter-spacing:.04em}
+.profile-page .player-id-hint{color:var(--dim);font-size:11px;margin-top:4px}
+.profile-page .bio{color:var(--text2);font-size:13px;margin-top:14px;cursor:pointer;padding:8px 16px;border:1px dashed var(--border);border-radius:8px;max-width:300px;text-align:center;transition:border-color .2s,color .2s}
+.profile-page .bio:hover{border-color:var(--accent);color:var(--text)}
+.profile-page .id-section{margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;width:100%;max-width:320px}
+.profile-page .id-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
+.profile-page .id-value{font-size:20px;font-weight:700;color:var(--gold);font-family:monospace;letter-spacing:.06em;cursor:pointer;user-select:all}
+.profile-page .id-value:hover{color:#fff}
+.profile-page .id-copy-hint{font-size:11px;color:var(--dim)}
+
 /* ── Grid ── */
 .container{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 2rem 3rem}
 .section-title{font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:var(--silver);text-transform:uppercase;letter-spacing:.08em;font-size:.8rem}
@@ -68,7 +91,7 @@ footer{position:relative;z-index:1;text-align:center;padding:2rem;color:var(--di
 <canvas id="stars"></canvas>
 
 <header class="top-bar">
-  <div class="profile-bubble" id="profile-bubble" title="点击复制游戏ID">
+  <div class="profile-bubble" id="profile-bubble" title="进入主页">
     <div class="avatar" id="portal-avatar">🐾</div>
     <div class="profile-info">
       <span class="nickname" id="portal-nickname">未命名</span>
@@ -78,14 +101,37 @@ footer{position:relative;z-index:1;text-align:center;padding:2rem;color:var(--di
   <div class="top-logo">Thawpaw Games<span>portal</span></div>
 </header>
 
-<div class="hero">
-  <h1>Thawpaw Games</h1>
-  <p>Warrior Cats adventures await. Pick a game and begin your quest.</p>
+<!-- ===== HOME PAGE ===== -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <h1>Thawpaw Games</h1>
+    <p>Warrior Cats adventures await. Pick a game and begin your quest.</p>
+  </div>
+  <div class="container">
+    <div class="section-title">All Games</div>
+    <div class="games-grid" id="grid"></div>
+  </div>
 </div>
 
-<div class="container">
-  <div class="section-title">All Games</div>
-  <div class="games-grid" id="grid"></div>
+<!-- ===== PROFILE PAGE ===== -->
+<div id="page-profile" class="page">
+  <div class="back-btn" onclick="showPage('home')">←</div>
+  <div class="profile-page">
+    <div class="big-avatar" id="profile-avatar">🐾</div>
+    <div class="name-section">
+      <div class="name-line">
+        <span class="nickname" id="profile-nickname">未命名</span>
+        <span class="edit-btn" onclick="editNickname()" title="修改昵称">📝</span>
+      </div>
+      <div class="player-id" id="profile-player-id">游戏ID：--------</div>
+    </div>
+    <div class="bio" id="profile-bio" onclick="editBio()" title="点击设置简介">点击设置简介</div>
+    <div class="id-section" onclick="copyPlayerId()" title="点击复制" style="cursor:pointer">
+      <span class="id-label">🎮 游戏ID</span>
+      <span class="id-value" id="profile-id-value">--------</span>
+      <span class="id-copy-hint">点击复制</span>
+    </div>
+  </div>
 </div>
 
 <footer>Made with ❄️ by IcePaw &amp; ThawPaw</footer>
@@ -213,31 +259,86 @@ function getPlayerId(){
 function getPortalProfile(){
   try{
     const s = localStorage.getItem('thawpawPlayer');
-    if(s) return {...{nickname:'未命名',avatar:'🐾'},...JSON.parse(s)};
+    if(s) return {...{nickname:'未命名',avatar:'🐾',bio:''},...JSON.parse(s)};
   }catch(e){}
-  return {nickname:'未命名',avatar:'🐾'};
+  return {nickname:'未命名',avatar:'🐾',bio:''};
 }
 function savePortalProfile(p){
   localStorage.setItem('thawpawPlayer', JSON.stringify(p));
 }
 
 // ── 填充主页气泡 ──
-(function(){
+function refreshPortal(){
   const prof = getPortalProfile();
+  const id = getPlayerId();
+  // 顶栏
   document.getElementById('portal-avatar').textContent = prof.avatar;
   document.getElementById('portal-nickname').textContent = prof.nickname;
-  document.getElementById('portal-player-id').textContent = '游戏ID：' + getPlayerId();
-  // 点击气泡复制 ID
-  document.getElementById('profile-bubble').addEventListener('click', ()=>{
-    const id = getPlayerId();
-    navigator.clipboard?.writeText(id);
-    const el = document.getElementById('portal-player-id');
-    const orig = el.textContent;
-    el.textContent = '已复制 ' + id + ' ✓';
-    el.style.color = 'var(--gold)';
-    setTimeout(()=>{ el.textContent = orig; el.style.color = ''; }, 1500);
-  });
-})();
+  document.getElementById('portal-player-id').textContent = '游戏ID：' + id;
+  // 主页
+  document.getElementById('profile-avatar').textContent = prof.avatar;
+  document.getElementById('profile-nickname').textContent = prof.nickname;
+  document.getElementById('profile-player-id').textContent = '游戏ID：' + id;
+  document.getElementById('profile-id-value').textContent = id;
+  document.getElementById('profile-bio').textContent = prof.bio || '点击设置简介';
+}
+
+// ── 页面切换 ──
+let currentPage = 'home';
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  currentPage = name;
+  window.scrollTo(0, 0);
+  // 主页时同步顶栏 ID 颜色
+  if(name === 'profile') refreshPortal();
+}
+
+// ── 改昵称 ──
+function editNickname(){
+  const prof = getPortalProfile();
+  const name = prompt('给自己起个名字吧：', prof.nickname);
+  if(name !== null && name.trim()){
+    prof.nickname = name.trim().slice(0, 16);
+    savePortalProfile(prof);
+    refreshPortal();
+  }
+}
+
+// ── 改简介 ──
+function editBio(){
+  const prof = getPortalProfile();
+  const bio = prompt('写点简介吧：', prof.bio || '');
+  if(bio !== null){
+    prof.bio = bio.trim().slice(0, 50);
+    savePortalProfile(prof);
+    refreshPortal();
+  }
+}
+
+// ── 复制 ID ──
+function copyPlayerId(){
+  const id = getPlayerId();
+  navigator.clipboard?.writeText(id);
+  const el = document.getElementById('profile-id-value');
+  const hint = document.querySelector('.id-copy-hint');
+  const orig = el.textContent;
+  const origHint = hint.textContent;
+  el.textContent = '已复制 ✓';
+  hint.textContent = '粘贴到聊天或备忘录';
+  el.style.color = 'var(--gold)';
+  setTimeout(()=>{
+    el.textContent = orig;
+    hint.textContent = origHint;
+    el.style.color = '';
+  }, 1500);
+}
+
+// ── 点击顶栏气泡 → 进入主页 ──
+document.getElementById('profile-bubble').addEventListener('click', () => showPage('profile'));
+
+// ── 初始填充 ──
+refreshPortal();
 
 // ── Load manifest & build cards ──
 (async function(){
