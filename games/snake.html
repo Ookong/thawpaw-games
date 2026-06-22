@@ -115,6 +115,20 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .modal .modal-close{position:absolute;top:10px;right:14px;cursor:pointer;font-size:20px;}
 .modal h3{margin-bottom:12px;font-size:16px;}
 
+/* ===== SETTINGS (gear) ===== */
+.settings-btn{font-size:22px;cursor:pointer;padding:6px 8px;border-radius:8px;transition:background .2s;margin-left:6px;line-height:1;user-select:none;}
+.settings-btn:hover{background:rgba(255,255,255,.08);}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 4px;border-bottom:1px solid #333;}
+.settings-row:last-child{border-bottom:none;}
+.settings-label{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text);}
+.settings-label .lbl-icon{font-size:22px;}
+.settings-label small{color:var(--text2);font-size:11px;display:block;margin-top:2px;}
+.settings-toggle{position:relative;width:48px;height:26px;background:#444;border-radius:13px;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.settings-toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;}
+.settings-toggle.on{background:var(--accent);}
+.settings-toggle.on::after{transform:translateX(22px);}
+.settings-hint{font-size:11px;color:var(--text2);text-align:center;margin-top:14px;line-height:1.5;}
+
 /* ===== BANK ===== */
 .bank-content .exchange-item{background:var(--card2);border-radius:var(--radius);padding:14px;margin-bottom:10px;}
 .bank-content .exchange-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-weight:600;}
@@ -176,8 +190,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 <!-- ===== HOME PAGE ===== -->
 <div id="page-home" class="page active">
-  <div class="top-bar" onclick="showPage('profile')">
-    <div class="profile-bubble">
+  <div class="top-bar">
+    <div class="profile-bubble" onclick="showPage('profile')">
       <div class="avatar" id="home-avatar">🐍</div>
       <div class="profile-info">
         <div class="name-row">
@@ -189,6 +203,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     </div>
     <div class="home-currency-bubble">💰 <span id="home-gold">0</span></div>
     <div class="home-currency-bubble">🍎 <span id="home-apples">0</span></div>
+    <div class="settings-btn" onclick="event.stopPropagation();openSettings()" title="设置">⚙️</div>
   </div>
   <div class="home-content">
     <!-- 左1/4 -->
@@ -379,6 +394,28 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal" style="max-width:360px;">
+    <span class="modal-close" onclick="closeModal('settings')">✕</span>
+    <h3>⚙️ 设置</h3>
+    <div class="settings-row">
+      <div class="settings-label">
+        <span class="lbl-icon">🎵</span>
+        <div>音乐<small>背景音乐（暂无）</small></div>
+      </div>
+      <div class="settings-toggle" id="toggle-music" onclick="toggleSetting('music')"></div>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">
+        <span class="lbl-icon">🔊</span>
+        <div>音效<small>吃苹果、打斗、升级等</small></div>
+      </div>
+      <div class="settings-toggle" id="toggle-sfx" onclick="toggleSetting('sfx')"></div>
+    </div>
+    <div class="settings-hint">⚙️ 设置会自动保存到本地<br>在所有 Thawpaw 游戏间共享</div>
+  </div>
+</div>
+
 <script>
 // ===== DATA =====
 const AVATARS = ['🐍','🐱','🐶','🐸','🦊','🐼','🐰','🦁','🐯','🐻','🐨','🐵','🦄','🐲','🦋','🐢'];
@@ -400,6 +437,31 @@ let player = {
   skin: 'skin_classic',
   inventory: {},
 };
+
+// ===== SETTINGS (音乐/音效，与所有 Thawpaw 游戏共享) =====
+let settings = { music: true, sfx: true };
+function loadSettings(){
+  try{ const s=localStorage.getItem('thawpaw_settings'); if(s) settings=Object.assign(settings,JSON.parse(s)); }catch(e){}
+}
+function saveSettings(){
+  try{ localStorage.setItem('thawpaw_settings',JSON.stringify(settings)); }catch(e){}
+}
+function openSettings(){
+  refreshSettingsUI();
+  openModal('settings');
+}
+function refreshSettingsUI(){
+  const m=document.getElementById('toggle-music');
+  const s=document.getElementById('toggle-sfx');
+  if(m) m.classList.toggle('on', !!settings.music);
+  if(s) s.classList.toggle('on', !!settings.sfx);
+}
+function toggleSetting(key){
+  settings[key]=!settings[key];
+  saveSettings();
+  refreshSettingsUI();
+  if(key==='sfx' && settings.sfx && typeof sfxPickup==='function') sfxPickup();
+}
 
 // 统一 ID：优先用 portal 的 8 位数字 ID
 function getUnifiedPlayerId(){
@@ -838,6 +900,7 @@ document.querySelectorAll('.modal-overlay').forEach(el=>{
 
 // ===== INIT =====
 loadPlayer();
+loadSettings();
 refreshHome();
 
 // ===== AUTO FULLSCREEN =====

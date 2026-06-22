@@ -138,6 +138,20 @@ a{color:#88aaff;}
 .textexp-log .log-boss{color:#ff8866;font-weight:700;}
 .mm-ticket{display:inline-block;background:rgba(255,204,68,.18);color:var(--gold);font-size:10px;padding:2px 6px;border-radius:8px;margin-left:4px;font-weight:600;}
 
+/* ===== SETTINGS (gear) ===== */
+.settings-btn{font-size:22px;cursor:pointer;padding:6px 8px;border-radius:8px;transition:background .2s;margin-left:6px;line-height:1;user-select:none;}
+.settings-btn:hover{background:rgba(255,255,255,.08);}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 4px;border-bottom:1px solid #333;}
+.settings-row:last-child{border-bottom:none;}
+.settings-label{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text);}
+.settings-label .lbl-icon{font-size:22px;}
+.settings-label small{color:var(--text2);font-size:11px;display:block;margin-top:2px;}
+.settings-toggle{position:relative;width:48px;height:26px;background:#444;border-radius:13px;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.settings-toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;}
+.settings-toggle.on{background:var(--accent);}
+.settings-toggle.on::after{transform:translateX(22px);}
+.settings-hint{font-size:11px;color:var(--text2);text-align:center;margin-top:14px;line-height:1.5;}
+
 /* ===== GAME PAGE ===== */
 .game-page{align-items:center;justify-content:center;position:relative;background:#0a0a14;}
 .game-page canvas{border:2px solid var(--card2);border-radius:8px;background:#0a0a1a;}
@@ -308,8 +322,8 @@ a{color:#88aaff;}
 
 <!-- ===== HOME PAGE ===== -->
 <div id="page-home" class="page active">
-  <div class="top-bar" onclick="showPage('profile')">
-    <div class="profile-bubble">
+  <div class="top-bar">
+    <div class="profile-bubble" onclick="showPage('profile')">
       <div class="avatar" id="home-avatar">🐾</div>
       <div class="profile-info">
         <div class="name-row">
@@ -323,6 +337,7 @@ a{color:#88aaff;}
     <div class="home-currency-bubble">🪨 <span id="home-gravel">0</span></div>
     <div class="home-currency-bubble">🐾 <span id="home-stonecarvings">0</span></div>
     <div class="home-currency-bubble">🎟️ <span id="home-tickets">0</span></div>
+    <div class="settings-btn" onclick="event.stopPropagation();openSettings()" title="设置">⚙️</div>
   </div>
 
   <div class="home-content">
@@ -616,6 +631,31 @@ a{color:#88aaff;}
   </div>
 </div>
 
+<!-- ===== Settings Modal ===== -->
+<div id="modal-settings" class="modal-overlay">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-close" onclick="closeModal('modal-settings')">×</div>
+    <h3>⚙️ 设置</h3>
+    <div class="modal-body">
+      <div class="settings-row">
+        <div class="settings-label">
+          <span class="lbl-icon">🎵</span>
+          <div>音乐<small>背景音乐（暂无）</small></div>
+        </div>
+        <div class="settings-toggle" id="toggle-music" onclick="toggleSetting('music')"></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">
+          <span class="lbl-icon">🔊</span>
+          <div>音效<small>打斗、拾取、升级等</small></div>
+        </div>
+        <div class="settings-toggle" id="toggle-sfx" onclick="toggleSetting('sfx')"></div>
+      </div>
+      <div class="settings-hint">⚙️ 设置会自动保存到本地<br>在所有 Thawpaw 游戏间共享</div>
+    </div>
+  </div>
+</div>
+
 <!-- Avatar Picker Modal -->
 <div id="modal-avatar" class="modal-overlay">
   <div class="modal">
@@ -727,6 +767,31 @@ const BAG_ITEMS = [
 
 // ===== HOME CURRENCIES (持久化) =====
 let homeData = { moonstones: 0, gravel: 0, stoneCarvings: 0, tickets: 0 };
+
+// ===== SETTINGS (音乐/音效，在所有 Thawpaw 游戏间共享) =====
+let settings = { music: true, sfx: true };
+function loadSettings(){
+  try{ const s=localStorage.getItem('thawpaw_settings'); if(s) settings=Object.assign(settings,JSON.parse(s)); }catch(e){}
+}
+function saveSettings(){
+  try{ localStorage.setItem('thawpaw_settings',JSON.stringify(settings)); }catch(e){}
+}
+function openSettings(){
+  refreshSettingsUI();
+  openModal('modal-settings');
+}
+function refreshSettingsUI(){
+  const m=document.getElementById('toggle-music');
+  const s=document.getElementById('toggle-sfx');
+  if(m) m.classList.toggle('on', !!settings.music);
+  if(s) s.classList.toggle('on', !!settings.sfx);
+}
+function toggleSetting(key){
+  settings[key]=!settings[key];
+  saveSettings();
+  refreshSettingsUI();
+  if(key==='sfx' && settings.sfx) sfxPickup(); // 试听一下
+}
 
 // ===== PROFILE (持久化) =====
 let profile = {
@@ -929,7 +994,7 @@ function enterFloor(n){
 }
 function resetProgress(){
   showConfirm('确定要重置进度吗？\n将清除当前存档与关卡进度。',()=>{
-    try{localStorage.removeItem('moonstone_save');}catch(e){}
+    try{localStorage.removeItem(_dungeonSaveKey());}catch(e){}
     G.floor=1; G.maxFloorReached=1;
     G.shared={hp:30,maxHp:30,atk:5,exp:0,level:1,herbs:2,expHerbs:0,kills:0,fovBonus:0};
     G.p1={x:0,y:0,hp:30,maxHp:30,alive:true};
@@ -1432,18 +1497,15 @@ function renderMoreModes(){
         closeModal('modal-moremodes');
         return;
       }
-      showConfirm('切换模式会清除当前游戏存档，确定吗？',()=>{
-        mode=m.key;
-        saveMode();
-        document.body.classList.toggle('duo-mode',isDuo());
-        try{localStorage.removeItem('moonstone_save');}catch(e){}
-        try{localStorage.removeItem('text_explore_save');}catch(e){}
-        G.floor=1;G.maxFloorReached=1;
-        G.shared={hp:30,maxHp:30,atk:5,exp:0,level:1,herbs:2,expHerbs:0,kills:0,fovBonus:0};
-        closeModal('modal-moremodes');
-        showToast('已切换到 '+m.name);
-        refreshHomeUI();
-      });
+      // 不再清空存档——各模式独立保存
+      mode=m.key;
+      saveMode();
+      document.body.classList.toggle('duo-mode',isDuo());
+      // 尝试加载新模式的存档（不删除任何存档）
+      loadGame();
+      closeModal('modal-moremodes');
+      showToast('已切换到 '+m.name);
+      refreshHomeUI();
     };
     list.appendChild(el);
   });
@@ -1501,6 +1563,11 @@ function loadMode(){
     if(m==='solo'||m==='duo'||m==='text_explore') mode=m;
   }catch(e){}
 }
+// 各模式独立存档键
+function _dungeonSaveKey(){
+  if(mode==='text_explore') return 'text_explore_save';
+  return 'moonstone_save_' + mode; // 'moonstone_save_solo' / 'moonstone_save_duo'
+}
 function saveGame(){
   try{
     const d=JSON.stringify({
@@ -1513,13 +1580,27 @@ function saveGame(){
       enemies:G.enemies,items:G.items,seen:G.seen,
       player:G.shared, mode:mode,
     });
-    localStorage.setItem('moonstone_save',d);
+    localStorage.setItem(_dungeonSaveKey(),d);
   }catch(e){}
 }
 function loadGame(){
+  if(mode==='text_explore') return false; // 文字探索有自己的存档逻辑
+  // 先试新格式的 mode-specific key
+  let d=localStorage.getItem(_dungeonSaveKey());
+  // 迁移老存档：moonstone_save -> moonstone_save_solo
+  if(!d){
+    const old=localStorage.getItem('moonstone_save');
+    if(old){
+      try{
+        const s=JSON.parse(old);
+        localStorage.setItem('moonstone_save_solo',old);
+        localStorage.removeItem('moonstone_save');
+        d=old;
+      }catch(e){}
+    }
+  }
+  if(!d)return false;
   try{
-    const d=localStorage.getItem('moonstone_save');
-    if(!d)return false;
     const s=JSON.parse(d);
     G.floor=s.floor||1;
     G.maxFloorReached=s.maxFloorReached||G.floor;
@@ -1533,7 +1614,6 @@ function loadGame(){
     G.grid=s.grid;G.rooms=s.rooms;G.stairsPos=s.stairsPos;
     G.enemies=s.enemies||[];G.items=s.items||[];G.seen=s.seen||[];
     G.shopMsg='';
-    if(s.mode==='solo'||s.mode==='duo'||s.mode==='text_explore'){mode=s.mode;saveMode();}
     syncPlayerAlias();
     document.body.classList.toggle('duo-mode',isDuo());
     return true;
@@ -1552,6 +1632,7 @@ function initAudio(){
 }
 function playTone(freq,dur,type,vol){
   if(!audioCtx)return;
+  if(!settings.sfx)return;
   try{
     const o=audioCtx.createOscillator(),g=audioCtx.createGain();
     o.type=type||'square';o.frequency.value=freq;
@@ -2613,6 +2694,7 @@ resizeCanvas();
 loadMode();
 loadHome();
 loadProfile();
+loadSettings();
 syncPlayerAlias();
 document.body.classList.toggle('duo-mode',isDuo());
 txInit();
