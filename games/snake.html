@@ -20,6 +20,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 /* ===== TOP BAR ===== */
 .top-bar{display:flex;align-items:center;padding:10px 16px;background:var(--card);gap:12px;cursor:pointer;min-height:56px;}
 .profile-bubble{display:flex;align-items:center;gap:10px;flex:1;}
+.home-currency-bubble{background:var(--card2);border-radius:20px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap;}
 .avatar{width:40px;height:40px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid var(--accent);}
 .profile-info{display:flex;flex-direction:column;gap:2px;}
 .profile-info .name-row{display:flex;align-items:center;gap:6px;}
@@ -186,6 +187,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <div class="level-bar-wrap"><div class="level-bar" id="home-level-bar"></div></div>
       </div>
     </div>
+    <div class="home-currency-bubble">💰 <span id="home-gold">0</span></div>
+    <div class="home-currency-bubble">🍎 <span id="home-apples">0</span></div>
   </div>
   <div class="home-content">
     <!-- 左1/4 -->
@@ -433,6 +436,8 @@ function refreshHome(){
   document.getElementById('home-nickname').textContent = player.nickname || '未命名';
   document.getElementById('home-level').textContent = 'Lv.'+player.level;
   document.getElementById('home-level-bar').style.width = (player.exp%100)+'%';
+  document.getElementById('home-gold').textContent = player.gold;
+  document.getElementById('home-apples').textContent = player.apples;
 }
 
 function refreshProfile(){
@@ -633,12 +638,11 @@ function startGame(){
   speedIndex = sp;
   canvas = document.getElementById('game-canvas');
   ctx = canvas.getContext('2d');
-  // Maximize canvas: use almost all screen width & available height
-  // Leave 10px side padding, 60px top (score bar + back btn) + 56px bottom bar
+  // Fit screen but cap cell size so small boards don't get huge on tablets
   const maxW = window.innerWidth - 10;
   const maxH = window.innerHeight - 130;
   const maxPx = Math.min(maxW, maxH);
-  cellSize = Math.floor(maxPx / gridSize);
+  cellSize = Math.min(Math.floor(maxPx / gridSize), 24);
   canvas.width = cellSize * gridSize;
   canvas.height = cellSize * gridSize;
   snake = [{x:Math.floor(gridSize/2),y:Math.floor(gridSize/2)}];
