@@ -326,6 +326,7 @@ tr:hover td{background:var(--card2)}
       <button class="tab" data-tab="games" onclick="switchTab('games')">🎮 游戏数据</button>
       <button class="tab" data-tab="feedback" onclick="switchTab('feedback')">💬 反馈</button>
       <button class="tab" data-tab="admins" onclick="switchTab('admins')" id="admin-tab">👥 管理员</button>
+      <button class="tab" data-tab="chatroom" onclick="switchTab('chatroom')" id="chatroom-tab">💬 聊天室</button>
     </div>
 
     <!-- ===== Overview Tab ===== -->
@@ -412,6 +413,27 @@ tr:hover td{background:var(--card2)}
           <button onclick="addSubAdmin()">添加</button>
         </div>
         <div style="font-size:.78rem;color:var(--dim);margin-top:.5rem">仅超级管理员可操作</div>
+      </div>
+    </div>
+
+    <!-- ===== Chatroom Tab ===== -->
+    <div class="panel" id="panel-chatroom">
+      <div class="table-card" style="margin-bottom:1.5rem">
+        <div class="table-header"><h3>💬 聊天室成员</h3></div>
+        <div id="chatroom-members" style="padding:1rem">
+          <div class="empty-state"><div class="empty-icon">💬</div>加载中...</div>
+        </div>
+      </div>
+
+      <!-- Add member (admin only) -->
+      <div class="add-admin-section" id="add-member-section">
+        <h3>➕ 添加聊天室成员</h3>
+        <div class="add-admin-row">
+          <input type="text" id="new-member-name" placeholder="成员名称（如 如意）" maxlength="32">
+          <input type="text" id="new-member-platform" placeholder="平台（如 macOS/Win）" maxlength="32">
+          <button onclick="addChatroomMember()">添加</button>
+        </div>
+        <div style="font-size:.78rem;color:var(--dim);margin-top:.5rem">添加后会生成成员 ID 和 Token，只显示一次</div>
       </div>
     </div>
 
@@ -624,21 +646,27 @@ function showDashboard(){
 
   // Admin tab visibility (only admins can see)
   const adminTab = document.getElementById('admin-tab');
+  const chatroomTab = document.getElementById('chatroom-tab');
   if(isAdmin){
     adminTab.style.display = '';
+    chatroomTab.style.display = '';
   } else {
     adminTab.style.display = 'none';
-    // Non-admin: hide add-admin section too
+    chatroomTab.style.display = 'none';
   }
 
   // Add admin section: super only
   const addSection = document.getElementById('add-admin-section');
   addSection.style.display = (session.role === 'super') ? '' : 'none';
 
+  // Add member section: admin+ can add members
+  const addMemSec = document.getElementById('add-member-section');
+  addMemSec.style.display = isAdmin ? '' : 'none';
+
   // Load data
   loadStats();
   loadFeedback();
-  if(isAdmin) loadAdmins();
+  if(isAdmin) { loadAdmins(); loadChatroomMembers(); }
 
   // 🔔 启动反馈监控（自动弹通知）
   startFeedbackWatcher();
@@ -844,6 +872,101 @@ function removeSubAdmin(targetId){
       loadAdmins();
     } else {
       alert('❌ ' + (res.error || '移除失败'));
+    }
+  }).catch(err => alert('❌ 网络错误'));
+}
+
+// ── Chatroom member management ──
+function loadChatroomMembers(){
+  apiGet('chatroom/listMembers', { id: session.id, nickname: session.nickname }).then(res => {
+    if(!res.ok) return;
+    const members = res.members || [];
+    const el = document.getElementById('chatroom-members');
+    if(members.length === 0){
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div>暂无聊天室成员</div>';
+      return;
+    }
+    el.innerHTML = members.map(m => {
+      const statusColor = m.status === 'active' ? 'var(--green)' : 'var(--dim)';
+      const statusText = m.status === 'active' ? '在线' : '已移除';
+      const created = m.createdAt ? new Date(m.createdAt).toLocaleDateString('zh-CN') : '';
+      const lastSeen = m.lastSeen ? new Date(m.lastSeen).toLocaleString('zh-CN') : '从未';
+      return '<div class="admin-card">' +
+        '<div class="admin-info">' +
+          '<div class="admin-avatar">💬</div>' +
+          '<div class="admin-details">' +
+            '<div class="admin-name">' + escapeHtml(m.name) + '</div>' +
+            '<div class="admin-id">MID: ' + escapeHtml(m.mid) + ' · 平台: ' + escapeHtml(m.platform || 'unknown') + '</div>' +
+            '<div class="admin-id" style="color:var(--dim)">加入: ' + created + ' · 最后活跃: ' + lastSeen + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:.5rem">' +
+          '<span class="admin-role ' + (m.status === 'active' ? 'sub' : 'super') + '" style="background:' + statusColor + '20;color:' + statusColor + '">' + statusText + '</span>' +
+          (m.status === 'active' ? '<button class="remove-admin-btn" onclick="regenMemberToken(\'' + m.mid + '\',\'' + escapeHtml(m.name) + '\')" style="background:var(--accent);color:#fff;margin-right:4px">🔄 Token</button>' : '') +
+          (m.status === 'active' ? '<button class="remove-admin-btn" onclick="removeChatroomMember(\'' + m.mid + '\',\'' + escapeHtml(m.name) + '\')">移除</button>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }).catch(err => {
+    document.getElementById('chatroom-members').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div>加载失败</div>';
+  });
+}
+
+function addChatroomMember(){
+  const name = document.getElementById('new-member-name').value.trim();
+  const platform = document.getElementById('new-member-platform').value.trim() || 'unknown';
+  if(!name){ alert('请输入成员名称'); return; }
+
+  apiPost('chatroom/addMember', {
+    id: session.id,
+    nickname: session.nickname,
+    name: name,
+    platform: platform
+  }).then(res => {
+    if(res.ok){
+      // Show token in a copyable alert
+      const msg = '✅ 成员已添加\n\n名称: ' + res.name + '\nMID: ' + res.mid + '\nToken: ' + res.token + '\n\n⚠️ Token 只显示这一次，请立即复制保存！';
+      alert(msg);
+      // Also copy to clipboard
+      navigator.clipboard.writeText(res.token).then(() => {
+        console.log('[TPG] Token copied to clipboard');
+      }).catch(() => {});
+      document.getElementById('new-member-name').value = '';
+      document.getElementById('new-member-platform').value = '';
+      loadChatroomMembers();
+    } else {
+      alert('❌ ' + (res.error || '添加失败'));
+    }
+  }).catch(err => alert('❌ 网络错误'));
+}
+
+function removeChatroomMember(mid, name){
+  if(!confirm('确定移除聊天室成员「' + name + '」(' + mid + ')？\n移除后 Token 立即失效。')) return;
+  apiPost('chatroom/removeMember', {
+    id: session.id,
+    nickname: session.nickname,
+    mid: mid
+  }).then(res => {
+    if(res.ok){
+      alert('✅ 已移除');
+      loadChatroomMembers();
+    } else {
+      alert('❌ ' + (res.error || '移除失败'));
+    }
+  }).catch(err => alert('❌ 网络错误'));
+}
+
+function regenMemberToken(mid, name){
+  if(!confirm('重新生成「' + name + '」的 Token？旧 Token 会立即失效。')) return;
+  apiGet('chatroom/regenerateToken', { id: session.id, nickname: session.nickname, mid: mid }).then(res => {
+    if(res.ok){
+      const msg = '✅ Token 已重新生成\n\n名称: ' + name + '\nMID: ' + mid + '\n新 Token: ' + res.token + '\n\n⚠️ 请立即复制保存！';
+      alert(msg);
+      navigator.clipboard.writeText(res.token).then(() => {
+        console.log('[TPG] New token copied to clipboard');
+      }).catch(() => {});
+    } else {
+      alert('❌ ' + (res.error || '生成失败'));
     }
   }).catch(err => alert('❌ 网络错误'));
 }
